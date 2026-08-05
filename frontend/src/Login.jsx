@@ -26,26 +26,35 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 font-sans" dir="rtl">
-      <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl border border-slate-100 transition-all">
+    <div
+      className="min-h-screen flex items-center justify-center bg-slate-100 font-sans relative overflow-hidden"
+      dir="rtl"
+      style={{
+        backgroundImage: `radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.5) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(219, 234, 254, 0.4) 0px, transparent 50%)`
+      }}
+    >
+      {/* Abstract decorative grid pattern background overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+
+      <div className="max-w-md w-full bg-white/95 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-slate-100/80 transition-all z-10">
         <div className="flex flex-col items-center mb-8">
-          <div className="p-4 bg-blue-50 text-blue-600 rounded-full mb-4">
+          <div className="p-4 bg-blue-50 text-blue-600 rounded-full mb-4 ring-8 ring-blue-50/50">
             <LogIn size={36} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">تطبيق متابعة التفقد الميداني</h2>
-          <p className="text-slate-500 mt-1">سجل الدخول للوصول إلى لوحة التحكم</p>
+          <h2 className="text-2xl font-extrabold text-slate-800">تطبيق متابعة التفقد الميداني</h2>
+          <p className="text-slate-500 mt-1 font-medium">سجل الدخول للوصول إلى لوحة التحكم</p>
         </div>
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border-r-4 border-red-500 text-red-700 rounded-lg flex items-center gap-3">
             <ShieldAlert className="shrink-0" size={20} />
-            <span className="text-sm font-medium">{error}</span>
+            <span className="text-sm font-semibold">{error}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-slate-700 font-semibold mb-2 text-sm">اسم المستخدم</label>
+            <label className="block text-slate-700 font-bold mb-2 text-sm">اسم المستخدم</label>
             <div className="relative">
               <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400">
                 <User size={18} />
@@ -62,7 +71,7 @@ export default function Login() {
           </div>
 
           <div>
-            <label className="block text-slate-700 font-semibold mb-2 text-sm">كلمة المرور</label>
+            <label className="block text-slate-700 font-bold mb-2 text-sm">كلمة المرور</label>
             <div className="relative">
               <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400">
                 <Key size={18} />
