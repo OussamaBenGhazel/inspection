@@ -1,222 +1,312 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Search, Filter, PlusCircle, ArrowLeft, ArrowRight, UserPlus,
-  MapPin, School, BookOpen, Star, Sparkles, ChevronRight
+  Search, PlusCircle, ArrowRight, UserPlus,
+  MapPin, School, BookOpen, Star, RefreshCw, Trash2, Edit3, X, Save
 } from 'lucide-react';
+import { apiService } from './apiService';
 
-export default function TeachersList({ onNavigate, teachers = [] }) {
+export default function TeachersList({ onNavigate }) {
+  const [teachers, setTeachers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [regionFilter, setRegionFilter] = useState('ALL');
-  const [institutionFilter, setInstitutionFilter] = useState('ALL');
-  const [rankFilter, setRankFilter] = useState('ALL');
-  const [academicYear, setAcademicYear] = useState('2026/2027');
 
-  // Hardcoded or dynamic teachers list for visual representation (Screen 02)
-  const defaultTeachers = [
-    { id: 1, name: "صالح البكوش", school: "المدرسة الإعدادية بالرياض", region: "تونس 1", rank: "أستاذ أول", date: "2026-11-04", score: "3.2 / 4", status: "مستقر" },
-    { id: 2, name: "سناء بن عمر", school: "معهد ابن شرف بقابس", region: "قابس", rank: "أستاذة أولى مميزة", date: "2026-11-05", score: "3.8 / 4", status: "متقدم" },
-    { id: 3, name: "سليم الهرماسي", school: "الإعدادية النموذجية بصفاقس", region: "صفاقس", rank: "أستاذ أول", date: "2026-11-03", score: "2.5 / 4", status: "قيد المتابعة" },
-    { id: 4, name: "ليلى المنصوري", school: "معهد المنزه السادس", region: "أريانة", rank: "أستاذة مبرزة", date: "2026-11-02", score: "1.8 / 4", status: "دعم عاجل" },
-  ];
+  // Modal states
+  const [showModal, setShowModal] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentId, setCurrentId] = useState(null);
 
-  const listToRender = teachers.length > 0 ? teachers.map((t, idx) => ({
-    id: t.idEnseignant || idx + 1,
-    name: `${t.prenom} ${t.nom}`,
-    school: t.telephone ? "معهد المتفوقين الجهوي" : "مدرسة حكومية عامة",
-    region: idx % 2 === 0 ? "تونس 1" : "قابس",
-    rank: t.email ? "أستاذ أول" : "أستاذ مبرز",
-    date: "2026-11-05",
-    score: idx % 2 === 0 ? "3.2 / 4" : "3.8 / 4",
-    status: idx % 2 === 0 ? "مستقر" : "متقدم"
-  })) : defaultTeachers;
+  // Form states
+  const [nom, setNom] = useState('');
+  const [prenom, setPrenom] = useState('');
+  const [matiere, setMatiere] = useState('');
+  const [email, setEmail] = useState('');
+  const [telephone, setTelephone] = useState('');
 
-  const filtered = listToRender.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          t.school.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRegion = regionFilter === 'ALL' || t.region === regionFilter;
-    const matchesRank = rankFilter === 'ALL' || t.rank.includes(rankFilter);
-    return matchesSearch && matchesRegion && matchesRank;
+  const fetchTeachers = async () => {
+    setLoading(true);
+    try {
+      const data = await apiService.getEnseignants();
+      setTeachers(data);
+    } catch (err) {
+      console.error('Error fetching teachers:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeachers();
+  }, []);
+
+  const handleOpenAdd = () => {
+    setIsEditMode(false);
+    setNom('');
+    setPrenom('');
+    setMatiere('');
+    setEmail('');
+    setTelephone('');
+    setShowModal(true);
+  };
+
+  const handleOpenEdit = (t) => {
+    setIsEditMode(true);
+    setCurrentId(t.idEnseignant);
+    setNom(t.nom || '');
+    setPrenom(t.prenom || '');
+    setMatiere(t.matiere || '');
+    setEmail(t.email || '');
+    setTelephone(t.telephone || '');
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا الأستاذ نهائياً من قاعدة البيانات؟')) {
+      try {
+        await apiService.deleteEnseignant(id);
+        alert('تم حذف الأستاذ بنجاح!');
+        fetchTeachers();
+      } catch (err) {
+        alert('حدث خطأ أثناء محاولة الحذف.');
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!nom || !prenom || !matiere) {
+      alert('يرجى ملء الحقول الإجبارية (الاسم، اللقب، والمادة).');
+      return;
+    }
+
+    const payload = { nom, prenom, matiere, email, telephone };
+
+    try {
+      if (isEditMode) {
+        await apiService.updateEnseignant(currentId, payload);
+        alert('تم تحديث بيانات الأستاذ بنجاح!');
+      } else {
+        await apiService.createEnseignant(payload);
+        alert('تمت إضافة الأستاذ الجديد بنجاح في قاعدة البيانات!');
+      }
+      setShowModal(false);
+      fetchTeachers();
+    } catch (err) {
+      alert('فشل في إرسال البيانات للخادم.');
+    }
+  };
+
+  const filtered = teachers.filter(t => {
+    const fullName = `${t.prenom} ${t.nom}`.toLowerCase();
+    const searchVal = searchTerm.toLowerCase();
+    return fullName.includes(searchVal) ||
+           (t.matiere && t.matiere.toLowerCase().includes(searchVal)) ||
+           (t.school && t.school.toLowerCase().includes(searchVal));
   });
 
   return (
     <div className="space-y-6" dir="rtl">
-      {/* HEADER BAR (Screen 02) */}
+      {/* HEADER BAR */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800">إدارة وشؤون الأساتذة</h1>
-          <p className="text-xs text-slate-400 font-bold mt-1">عرض وتصفية وبحث شامل في كافة ملفات الأساتذة المسجلين تحت إشرافكم.</p>
+          <p className="text-xs text-slate-400 font-bold mt-1">عرض وتعديل وإضافة شاملة في كافة ملفات الأساتذة المسجلين في قاعدة البيانات.</p>
         </div>
 
         <button
-          onClick={() => alert('إضافة أستاذ جديد غير متاحة في النسخة التجريبية المحدودة.')}
+          onClick={handleOpenAdd}
           className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-100 transition text-xs shrink-0"
         >
           <UserPlus size={16} />
-          <span>إضافة أستاذ جديد (إدارة)</span>
+          <span>إضافة أستاذ جديد</span>
         </button>
       </div>
 
-      {/* FILTERING & SEARCH BAR (Screen 02) */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Search name or school */}
-          <div className="relative flex-1">
-            <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
-              <Search size={16} />
-            </span>
-            <input
-              type="text"
-              placeholder="ابحث باسم الأستاذ، المدرسة، أو المادة..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-xs transition font-semibold"
-            />
-          </div>
-
-          {/* Academic Year Selector */}
-          <div className="w-full md:w-48">
-            <select
-              value={academicYear}
-              onChange={(e) => setAcademicYear(e.target.value)}
-              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-700 text-xs font-bold"
-            >
-              <option value="2026/2027">السنة الدراسية 2026/2027</option>
-              <option value="2025/2026">السنة الدراسية 2025/2026</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Dropdown Filters row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-          {/* Region */}
-          <div>
-            <label className="block text-slate-400 font-bold text-[10px] uppercase mb-1">الجهة / المندوبية</label>
-            <select
-              value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">جميع الجهات</option>
-              <option value="تونس 1">تونس 1</option>
-              <option value="قابس">قابس</option>
-              <option value="صفاقس">صفاقس</option>
-              <option value="أريانة">أريانة</option>
-            </select>
-          </div>
-
-          {/* Institution */}
-          <div>
-            <label className="block text-slate-400 font-bold text-[10px] uppercase mb-1">المؤسسة التربوية</label>
-            <select
-              value={institutionFilter}
-              onChange={(e) => setInstitutionFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">جميع المؤسسات</option>
-              <option value="حكومي">مدرسة إعدادية</option>
-              <option value="نموذجي">معهد ثانوي</option>
-            </select>
-          </div>
-
-          {/* Rank */}
-          <div>
-            <label className="block text-slate-400 font-bold text-[10px] uppercase mb-1">الرتبة الأكاديمية</label>
-            <select
-              value={rankFilter}
-              onChange={(e) => setRankFilter(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">جميع الرتب</option>
-              <option value="أستاذ أول">أستاذ أول</option>
-              <option value="أستاذ مبرز">أستاذ مبرز</option>
-            </select>
-          </div>
-
-          {/* Sort selection */}
-          <div className="flex items-end">
-            <span className="text-[11px] text-slate-400 font-bold pb-2">
-              تصفية النتائج النشطة: {filtered.length} أساتذة
-            </span>
-          </div>
+      {/* FILTERING & SEARCH BAR */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
+        <div className="relative">
+          <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
+            <Search size={16} />
+          </span>
+          <input
+            type="text"
+            placeholder="ابحث باسم الأستاذ، المادة، أو البريد الإلكتروني..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-xs transition font-semibold"
+          />
         </div>
       </div>
 
-      {/* DATA TABLE (Screen 02) */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right border-collapse">
-            <thead>
-              <tr className="bg-slate-50 text-slate-500 text-xs font-bold border-b border-slate-100">
-                <th className="p-4">الأستاذ</th>
-                <th className="p-4">المؤسسة التربوية / الجهة</th>
-                <th className="p-4">تاريخ آخر زيارة تفقد</th>
-                <th className="p-4">المعدل العام للكفايات</th>
-                <th className="p-4">الحالة والمتابعة</th>
-                <th className="p-4">الملف الشخصي</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-              {filtered.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-50/50 transition">
-                  {/* Name & Rank */}
-                  <td className="p-4">
-                    <div className="font-bold text-slate-800">{t.name}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">{t.rank}</div>
-                  </td>
-
-                  {/* School & Region */}
-                  <td className="p-4">
-                    <div className="font-semibold text-slate-700 flex items-center gap-1">
-                      <School size={12} className="text-slate-400" />
-                      <span>{t.school}</span>
-                    </div>
-                    <div className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-1">
-                      <MapPin size={10} />
-                      <span>{t.region}</span>
-                    </div>
-                  </td>
-
-                  {/* Date of visit */}
-                  <td className="p-4 font-semibold text-slate-500">
-                    {t.date}
-                  </td>
-
-                  {/* Overall Average */}
-                  <td className="p-4">
-                    <div className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 border border-blue-100 rounded-lg text-blue-700 font-extrabold text-[11px]">
-                      <Star size={10} className="fill-current" />
-                      <span>{t.score}</span>
-                    </div>
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="p-4">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
-                      t.status === 'متقدم' ? 'bg-green-50 text-green-700 border border-green-200' :
-                      t.status === 'مستقر' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                      t.status === 'قيد المتابعة' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-                      'bg-red-50 text-red-700 border border-red-200 animate-pulse'
-                    }`}>
-                      {t.status}
-                    </span>
-                  </td>
-
-                  {/* Profile action */}
-                  <td className="p-4">
-                    <button
-                      onClick={() => onNavigate('teacher-profile', t)}
-                      className="flex items-center gap-1 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-bold rounded-xl transition text-[11px]"
-                    >
-                      <span>عرض الملف</span>
-                      <ChevronRight size={14} />
-                    </button>
-                  </td>
+      {loading ? (
+        <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-100">
+          <RefreshCw className="animate-spin text-blue-600 mr-2" />
+          <span className="text-xs font-bold text-slate-500">جاري تحميل قائمة الأساتذة الحية...</span>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 text-xs font-bold border-b border-slate-100">
+                  <th className="p-4">الأستاذ</th>
+                  <th className="p-4">المادة البيداغوجية</th>
+                  <th className="p-4">البريد الإلكتروني</th>
+                  <th className="p-4">الهاتف</th>
+                  <th className="p-4 text-center">الإجراءات والعمليات</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                {filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="p-8 text-center text-slate-400 font-bold">لا توجد سجلات مطابقة للبحث.</td>
+                  </tr>
+                ) : (
+                  filtered.map((t) => (
+                    <tr key={t.idEnseignant} className="hover:bg-slate-50/50 transition">
+                      <td className="p-4 font-bold text-slate-800">
+                        {t.prenom} {t.nom}
+                      </td>
+                      <td className="p-4 text-slate-600 font-semibold">
+                        {t.matiere}
+                      </td>
+                      <td className="p-4 text-slate-500 font-semibold">
+                        {t.email || 'غير متوفر'}
+                      </td>
+                      <td className="p-4 text-slate-500 font-semibold">
+                        {t.telephone || 'غير متوفر'}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleOpenEdit(t)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition text-[10px] font-bold"
+                          >
+                            <Edit3 size={12} />
+                            <span>تعديل</span>
+                          </button>
+                          <button
+                            onClick={() => handleDelete(t.idEnseignant)}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-[10px] font-bold"
+                          >
+                            <Trash2 size={12} />
+                            <span>حذف</span>
+                          </button>
+                          <button
+                            onClick={() => onNavigate('teacher-profile', { id: t.idEnseignant, name: `${t.prenom} ${t.nom}`, school: 'المدرسة الإعدادية الحكومية', region: 'الجمهورية التونسية', rank: 'أستاذ أول للمادة', score: '3.5 / 4' })}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition text-[10px] font-bold"
+                          >
+                            <span>ملف الكفايات</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ADD/EDIT DYNAMIC MODAL FORM */}
+      {showModal && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-800">
+                {isEditMode ? 'تعديل بيانات الأستاذ' : 'إضافة أستاذ جديد'}
+              </h3>
+              <button
+                onClick={() => setShowModal(false)}
+                className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 rounded-lg transition"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Form Content */}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs font-semibold text-slate-700">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-500 mb-1">الاسم الأول *</label>
+                  <input
+                    type="text"
+                    required
+                    value={prenom}
+                    onChange={(e) => setPrenom(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                    placeholder="أدخل الاسم الأول..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-500 mb-1">اللقب / اسم العائلة *</label>
+                  <input
+                    type="text"
+                    required
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                    placeholder="أدخل اسم العائلة..."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-500 mb-1">المادة المدرسة / الاختصاص البيداغوجي *</label>
+                <input
+                  type="text"
+                  required
+                  value={matiere}
+                  onChange={(e) => setMatiere(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                  placeholder="مثال: الرياضيات، الفيزياء، العربية..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-500 mb-1">البريد الإلكتروني</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                  placeholder="username@domain.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-500 mb-1">رقم الهاتف الجوال</label>
+                <input
+                  type="text"
+                  value={telephone}
+                  onChange={(e) => setTelephone(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
+                  placeholder="أدخل رقم الهاتف..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded-xl transition"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition"
+                >
+                  <Save size={14} />
+                  <span>{isEditMode ? 'حفظ التعديلات' : 'إضافة إلى القائمة'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

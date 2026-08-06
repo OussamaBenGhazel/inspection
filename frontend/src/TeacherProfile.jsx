@@ -10,9 +10,9 @@ export default function TeacherProfile({ teacher, onNavigate }) {
 
   if (!teacher) {
     return (
-      <div className="p-6 bg-yellow-50 text-yellow-800 rounded-2xl flex items-center gap-3">
+      <div className="p-6 bg-yellow-50 text-yellow-800 rounded-2xl flex items-center gap-3" dir="rtl">
         <AlertTriangle size={20} />
-        <span className="font-bold">يرجى اختيار أستاذ من القائمة لعرض ملفه الشخصي.</span>
+        <span className="font-bold">يرجى اختيار أستاذ من القائمة لعرض ملفه الشخصي الشامل.</span>
       </div>
     );
   }
@@ -28,23 +28,23 @@ export default function TeacherProfile({ teacher, onNavigate }) {
         <span>العودة لقائمة الأساتذة</span>
       </button>
 
-      {/* PROFILE HEADER (Screen 03) */}
+      {/* PROFILE HEADER */}
       <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="h-16 w-16 bg-blue-100 border-2 border-blue-200 rounded-full flex items-center justify-center font-extrabold text-2xl text-blue-600 shadow-inner">
-            {teacher.name[0]}
+            {teacher.name ? teacher.name[0] : 'أ'}
           </div>
           <div className="space-y-1">
             <h2 className="text-xl font-extrabold text-slate-800">{teacher.name}</h2>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 font-bold">
               <span className="flex items-center gap-1">
                 <School size={12} />
-                <span>{teacher.school} ({teacher.region})</span>
+                <span>{teacher.school || 'المدرسة الإعدادية المعتمدة'} ({teacher.region || 'الجمهورية التونسية'})</span>
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
                 <Award size={12} />
-                <span>الرتبة: {teacher.rank}</span>
+                <span>الرتبة: {teacher.rank || 'أستاذ بيداغوجي أول'}</span>
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
@@ -65,7 +65,7 @@ export default function TeacherProfile({ teacher, onNavigate }) {
         </div>
       </div>
 
-      {/* NAVIGATION TABS (Screen 03) */}
+      {/* NAVIGATION TABS */}
       <div className="flex border-b border-slate-200 gap-1 overflow-x-auto pb-px">
         <button
           onClick={() => setActiveTab('basic')}
@@ -105,7 +105,7 @@ export default function TeacherProfile({ teacher, onNavigate }) {
         </button>
       </div>
 
-      {/* TAB CONTENT: BASIC INFO CARDS & TIMELINE (Screen 03) */}
+      {/* TAB CONTENT: BASIC INFO CARDS & TIMELINE */}
       {activeTab === 'basic' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Professional profile summary */}
@@ -123,19 +123,19 @@ export default function TeacherProfile({ teacher, onNavigate }) {
                 </div>
                 <div>
                   <span className="text-slate-400">المؤسسة التربوية:</span>
-                  <p className="text-slate-800 mt-1">{teacher.school}</p>
+                  <p className="text-slate-800 mt-1">{teacher.school || 'المدرسة الإعدادية بالرياض'}</p>
                 </div>
                 <div>
                   <span className="text-slate-400">المندوبية الجهوية للتربية:</span>
-                  <p className="text-slate-800 mt-1">{teacher.region}</p>
+                  <p className="text-slate-800 mt-1">{teacher.region || 'تونس 1'}</p>
                 </div>
                 <div>
                   <span className="text-slate-400">البريد الإلكتروني للوزارة:</span>
-                  <p className="text-slate-800 mt-1">teacher.email@education.gov.tn</p>
+                  <p className="text-slate-800 mt-1">{teacher.email || 'teacher.email@education.gov.tn'}</p>
                 </div>
                 <div>
                   <span className="text-slate-400">رقم هاتف الأستاذ:</span>
-                  <p className="text-slate-800 mt-1">98 765 432</p>
+                  <p className="text-slate-800 mt-1">{teacher.telephone || '98 765 432'}</p>
                 </div>
               </div>
             </div>
@@ -152,7 +152,7 @@ export default function TeacherProfile({ teacher, onNavigate }) {
                 <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100 text-center">
                   <Star className="text-blue-600 mx-auto" size={20} />
                   <p className="text-[10px] text-slate-400 font-bold mt-2">تقييم الكفايات الإجمالي</p>
-                  <p className="text-lg font-extrabold text-blue-700 mt-1">{teacher.score}</p>
+                  <p className="text-lg font-extrabold text-blue-700 mt-1">{teacher.score || '3.5 / 4'}</p>
                 </div>
                 <div className="p-4 bg-yellow-50/50 rounded-xl border border-yellow-100 text-center">
                   <AlertTriangle className="text-yellow-600 mx-auto" size={20} />
@@ -163,7 +163,7 @@ export default function TeacherProfile({ teacher, onNavigate }) {
             </div>
           </div>
 
-          {/* Inspection timeline visit blocks (Screen 03) */}
+          {/* Inspection timeline visit blocks */}
           <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
             <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">التسلسل الزمني للزيارات التفقدية</h3>
             <div className="relative border-r border-slate-100 pr-4 space-y-6 text-xs">

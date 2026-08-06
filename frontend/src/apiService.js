@@ -10,6 +10,13 @@ export const apiService = {
     if (!res.ok) {
       throw new Error(await res.text() || 'خطأ في تسجيل الدخول');
     }
+    // Record login audit event
+    try {
+      await fetch(`${API_BASE_URL}/audit-logs?action=تسجيل الدخول&message=قام المستخدم بالولوج إلى لوحة التحكم الرئيسية نجاح&username=${username}`, {
+        method: 'POST'
+      });
+    } catch (e) {}
+
     return res.json();
   },
 
@@ -17,6 +24,34 @@ export const apiService = {
     const res = await fetch(`${API_BASE_URL}/enseignants`);
     if (!res.ok) throw new Error('Failed to load teachers');
     return res.json();
+  },
+
+  createEnseignant: async (data) => {
+    const res = await fetch(`${API_BASE_URL}/enseignants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to create teacher');
+    return res.json();
+  },
+
+  updateEnseignant: async (id, data) => {
+    const res = await fetch(`${API_BASE_URL}/enseignants/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to update teacher');
+    return res.json();
+  },
+
+  deleteEnseignant: async (id) => {
+    const res = await fetch(`${API_BASE_URL}/enseignants/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete teacher');
+    return true;
   },
 
   getInspections: async () => {
@@ -83,6 +118,12 @@ export const apiService = {
       body: formData
     });
     if (!res.ok) throw new Error(await res.text() || 'Failed to upload piece jointe');
+    return res.json();
+  },
+
+  getAuditLogs: async () => {
+    const res = await fetch(`${API_BASE_URL}/audit-logs`);
+    if (!res.ok) throw new Error('Failed to load audit logs');
     return res.json();
   }
 };
