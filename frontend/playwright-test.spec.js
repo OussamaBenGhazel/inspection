@@ -12,19 +12,21 @@ test('E2E Full Flow Inspection App', async ({ page }) => {
   await page.click('button:has-text("تسجيل الدخول")');
 
   // Verify Dashboard Loaded
-  await expect(page.locator('h1:has-text("مرحباً بك في لوحة التحكم العامة")')).toBeVisible();
+  await expect(page.locator('text=آمنة فرحات')).toBeVisible();
   await page.screenshot({ path: 'playwright-dashboard.png' });
 
   // Navigate to New Inspection
-  await page.click('button:has-text("تفقد جديد (سريع)")');
-  await expect(page.locator('h1:has-text("إنشاء عملية تفقد جديدة")')).toBeVisible();
+  await page.click('text=تسجيل زيارة ميدانية (S04)');
+  await expect(page.locator('text=تسجيل زيارة ميدانية جديدة')).toBeVisible();
+
+  // Click Next to reach step 2
+  await page.click('text=التالي');
 
   // Create an inspection
-  await page.selectOption('select', { index: 1 }); // choose first teacher
-  await page.fill('textarea[placeholder="اكتب التوصيات البيداغوجية والتعليمية العامة للأستاذ..."]', 'ملاحظات بيداغوجية ممتازة وتوجيهات عملية.');
-  await page.click('button:has-text("حفظ عملية التفقد")');
+  await page.fill('textarea[placeholder="ما هي الجوانب المتميزة في أداء الأستاذ خلال هذه الحصة؟"]', 'ملاحظات بيداغوجية ممتازة وتوجيهات عملية.');
+  await page.click('text=حفظ كمسودة');
 
-  // Verify details page loaded
-  await expect(page.locator('h1:has-text("تفاصيل ومتابعة التفتيش")')).toBeVisible();
-  await page.screenshot({ path: 'playwright-details.png' });
+  // Verify dashboard page loaded back
+  await expect(page.locator('text=آمنة فرحات')).toBeVisible();
+  await page.screenshot({ path: 'playwright-dashboard-success.png' });
 });
