@@ -16,7 +16,7 @@ test('E2E Full Flow Inspection App', async ({ page }) => {
   await page.screenshot({ path: 'playwright-dashboard.png' });
 
   // Navigate to New Inspection
-  await page.click('text=تسجيل زيارة ميدانية (S04)');
+  await page.click('text=تسجيل زيارة ميدانية');
   await expect(page.locator('text=تسجيل زيارة ميدانية جديدة')).toBeVisible();
 
   // Click Next to reach step 2

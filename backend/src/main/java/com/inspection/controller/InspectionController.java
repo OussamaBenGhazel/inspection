@@ -3,6 +3,7 @@ package com.inspection.controller;
 import com.inspection.dto.EvaluationDTO;
 import com.inspection.dto.InspectionDTO;
 import com.inspection.model.*;
+import com.inspection.kafka.NotificationKafkaProducer;
 import com.inspection.repository.*;
 import com.inspection.service.PdfReportService;
 import org.springframework.http.HttpHeaders;
@@ -33,6 +34,7 @@ public class InspectionController {
     private final EvaluationRepository evaluationRepository;
     private final PieceJointeRepository pieceJointeRepository;
     private final PdfReportService pdfReportService;
+    private final NotificationKafkaProducer notificationKafkaProducer;
 
     // Define local upload directory
     private final String uploadDir = System.getProperty("user.dir") + "/uploads/";
@@ -43,13 +45,15 @@ public class InspectionController {
             InspecteurRepository inspecteurRepository,
             EvaluationRepository evaluationRepository,
             PieceJointeRepository pieceJointeRepository,
-            PdfReportService pdfReportService) {
+            PdfReportService pdfReportService,
+            NotificationKafkaProducer notificationKafkaProducer) {
         this.inspectionRepository = inspectionRepository;
         this.enseignantRepository = enseignantRepository;
         this.inspecteurRepository = inspecteurRepository;
         this.evaluationRepository = evaluationRepository;
         this.pieceJointeRepository = pieceJointeRepository;
         this.pdfReportService = pdfReportService;
+        this.notificationKafkaProducer = notificationKafkaProducer;
 
         // Ensure upload directory exists
         File uploadFolder = new File(uploadDir);
@@ -107,6 +111,16 @@ public class InspectionController {
                 ev.setCommentaire(evDto.getCommentaire());
                 evaluationRepository.save(ev);
             }
+        }
+
+        // Trigger Kafka notification workflow
+        try {
+            String notificationMsg = String.format("تم تسجيل زيارة ميدانية جديدة بنجاح للأستاذ %s %s بتاريخ %s بواسطة المتفقد %s %s.",
+                    enseignant.getPrenom(), enseignant.getNom(), savedInspection.getDateVisite(),
+                    inspecteur.getPrenom(), inspecteur.getNom());
+            notificationKafkaProducer.sendNotification(savedInspection.getIdInspection().toString(), notificationMsg);
+        } catch (Exception e) {
+            // Ignored so that it is highly robust and failure-tolerant
         }
 
         return ResponseEntity.ok(savedInspection);

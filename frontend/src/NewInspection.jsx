@@ -14,6 +14,7 @@ export default function FieldVisitRegistration({ onNavigate }) {
   const [visitNumber, setVisitNumber] = useState('1');
   const [inspectorName, setInspectorName] = useState('أ. آمنة فرحات');
   const [overallRating, setOverallRating] = useState('3.2');
+  const [uploadedFile, setUploadedFile] = useState(null);
 
   // Step 2: Notes & Evaluation
   const [lessonTopic, setLessonTopic] = useState('');
@@ -65,7 +66,7 @@ export default function FieldVisitRegistration({ onNavigate }) {
         </div>
       </div>
 
-      {/* MULTI-STEP FORM HEADER (Screen 04) */}
+      {/* MULTI-STEP FORM HEADER */}
       <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between gap-4 text-xs font-bold text-center">
         <div className={`flex-1 py-3.5 rounded-xl border ${step === 1 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
           <span>1. تفاصيل الزيارة الميدانية</span>
@@ -145,10 +146,32 @@ export default function FieldVisitRegistration({ onNavigate }) {
 
             <div>
               <label className="block text-slate-500 mb-2">رفع صور الحصة أو المستندات المرجعية</label>
-              <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-50 transition">
+              <label className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-50 transition block relative">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      const file = e.target.files[0];
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert('حجم الملف يتجاوز الحد الأقصى المسموح به وهو 5 ميغابايت.');
+                        return;
+                      }
+                      setUploadedFile(file);
+                    }
+                  }}
+                />
                 <Paperclip className="mx-auto text-slate-400" size={18} />
-                <span className="text-[10px] text-slate-500 font-bold block mt-1">اختر صورة أو ملف PDF (الأقصى 5MB)</span>
-              </div>
+                {uploadedFile ? (
+                  <div className="mt-1">
+                    <span className="text-[11px] text-emerald-600 font-bold block">تم اختيار: {uploadedFile.name}</span>
+                    <span className="text-[9px] text-slate-400 font-bold">الحجم: {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] text-slate-500 font-bold block mt-1">اضغط هنا لاختيار صورة أو ملف PDF (الأقصى 5MB)</span>
+                )}
+              </label>
             </div>
           </div>
         </div>
@@ -231,7 +254,7 @@ export default function FieldVisitRegistration({ onNavigate }) {
         </div>
       )}
 
-      {/* ACTION CONTROLS (Screen 04) */}
+      {/* ACTION CONTROLS */}
       <div className="flex items-center justify-between">
         <div>
           {step > 1 && (

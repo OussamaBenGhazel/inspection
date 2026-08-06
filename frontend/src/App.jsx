@@ -6,7 +6,7 @@ import InspectionsList from './InspectionsList';
 import NewInspection from './NewInspection';
 import InspectionDetails from './InspectionDetails';
 
-// Screen 5 to 15 added imports
+// Screen 5 to 14 added imports
 import CompetenciesBoard from './CompetenciesBoard';
 import PerformanceEvolution from './PerformanceEvolution';
 import RecommendationsTracking from './RecommendationsTracking';
@@ -17,13 +17,12 @@ import FinalDiagnosis from './FinalDiagnosis';
 import ReportsExport from './ReportsExport';
 import NotificationsAlerts from './NotificationsAlerts';
 import PermissionsAuditLog from './PermissionsAuditLog';
-import MobilePreview from './MobilePreview';
 import TeacherProfile from './TeacherProfile';
 
 import { apiService } from './apiService';
 import {
   LayoutDashboard, ListFilter, PlusCircle, LogOut, Award, TrendingUp,
-  MapPin, CheckSquare, Target, Settings, Eye, HelpCircle, HardHat, FileSpreadsheet, Bell, Shield, Smartphone
+  CheckSquare, Target, Settings, Eye, HelpCircle, FileSpreadsheet, Bell, Shield
 } from 'lucide-react';
 
 function AppContent() {
@@ -68,14 +67,29 @@ function AppContent() {
 
   return (
     <div
-      className="min-h-screen bg-slate-50 flex flex-col font-sans relative"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/20 to-emerald-50/10 flex flex-col font-sans relative overflow-hidden"
       dir="rtl"
-      style={{
-        backgroundImage: `radial-gradient(at 0% 0%, rgba(241, 245, 249, 0.6) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(219, 234, 254, 0.3) 0px, transparent 50%)`
-      }}
     >
-      {/* Decorative pattern overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_80%,transparent_100%)] pointer-events-none" />
+      {/* Dynamic Ministry/Academic Elegant Background Shapes */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-blue-100/30 to-transparent rounded-full filter blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-emerald-100/20 to-transparent rounded-full filter blur-3xl pointer-events-none" />
+
+      {/* Beautiful Geometric Academic Grid Pattern overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-35 pointer-events-none" />
+
+      {/* Institutional Watermark Shield & Book SVGs floating gracefully in background */}
+      <div className="absolute top-48 left-12 opacity-[0.02] text-blue-900 pointer-events-none hidden lg:block">
+        <svg width="240" height="240" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M12 8v4M12 16h.01"/>
+        </svg>
+      </div>
+      <div className="absolute bottom-24 right-12 opacity-[0.02] text-emerald-900 pointer-events-none hidden lg:block">
+        <svg width="280" height="280" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </div>
 
       {/* Header */}
       <header className="bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm sticky top-0 z-30">
@@ -106,7 +120,7 @@ function AppContent() {
       {/* Main Layout */}
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8 relative z-10">
 
-        {/* Responsive, Complete Sidebar for All 15 Screens */}
+        {/* Responsive, Complete Sidebar for All 14 Screens (without S15) */}
         <aside className="w-full lg:w-72 shrink-0">
           <nav className="bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-100 shadow-sm space-y-1.5 sticky top-24 max-h-[85vh] overflow-y-auto">
 
@@ -120,7 +134,7 @@ function AppContent() {
               }`}
             >
               <LayoutDashboard size={16} />
-              <span>لوحة التحكم الرئيسية (S01)</span>
+              <span>لوحة التحكم الرئيسية</span>
             </button>
 
             {/* Screen 2 */}
@@ -131,7 +145,7 @@ function AppContent() {
               }`}
             >
               <ListFilter size={16} />
-              <span>قائمة الأساتذة (S02)</span>
+              <span>قائمة الأساتذة</span>
             </button>
 
             {/* Screen 4 */}
@@ -142,7 +156,7 @@ function AppContent() {
               }`}
             >
               <PlusCircle size={16} />
-              <span>تسجيل زيارة ميدانية (S04)</span>
+              <span>تسجيل زيارة ميدانية</span>
             </button>
 
             {/* Screen 5 */}
@@ -153,7 +167,7 @@ function AppContent() {
               }`}
             >
               <Award size={16} />
-              <span>لوحة الكفايات الثمانية (S05)</span>
+              <span>لوحة الكفايات الثمانية</span>
             </button>
 
             {/* Screen 6 */}
@@ -164,7 +178,7 @@ function AppContent() {
               }`}
             >
               <TrendingUp size={16} />
-              <span>تحليل تطور الأداء (S06)</span>
+              <span>تحليل تطور الأداء</span>
             </button>
 
             {/* Screen 7 */}
@@ -175,7 +189,7 @@ function AppContent() {
               }`}
             >
               <CheckSquare size={16} />
-              <span>تتبع التوصيات البيداغوجية (S07)</span>
+              <span>تتبع التوصيات البيداغوجية</span>
             </button>
 
             {/* Screen 8 */}
@@ -186,7 +200,7 @@ function AppContent() {
               }`}
             >
               <Target size={16} />
-              <span>مؤشرات النمو المهني (S08)</span>
+              <span>مؤشرات النمو المهني</span>
             </button>
 
             {/* Screen 9 */}
@@ -197,7 +211,7 @@ function AppContent() {
               }`}
             >
               <Settings size={16} />
-              <span>خطة النمو الشخصية (S09)</span>
+              <span>خطة النمو الشخصية</span>
             </button>
 
             {/* Screen 10 */}
@@ -208,7 +222,7 @@ function AppContent() {
               }`}
             >
               <Eye size={16} />
-              <span>المؤشرات الكمية للتطور (S10)</span>
+              <span>المؤشرات الكمية للتطور</span>
             </button>
 
             {/* Screen 11 */}
@@ -219,7 +233,7 @@ function AppContent() {
               }`}
             >
               <HelpCircle size={16} />
-              <span>التشخيص الختامي (S11)</span>
+              <span>التشخيص الختامي</span>
             </button>
 
             {/* Screen 12 */}
@@ -230,7 +244,7 @@ function AppContent() {
               }`}
             >
               <FileSpreadsheet size={16} />
-              <span>التقارير والتصدير (S12)</span>
+              <span>التقارير والتصدير</span>
             </button>
 
             {/* Screen 13 */}
@@ -241,7 +255,7 @@ function AppContent() {
               }`}
             >
               <Bell size={16} />
-              <span>الإشعارات والتنبيهات (S13)</span>
+              <span>الإشعارات والتنبيهات</span>
             </button>
 
             {/* Screen 14 */}
@@ -252,18 +266,7 @@ function AppContent() {
               }`}
             >
               <Shield size={16} />
-              <span>إدارة الصلاحيات والسجل (S14)</span>
-            </button>
-
-            {/* Screen 15 */}
-            <button
-              onClick={() => navigateTo('mobile-preview')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'mobile-preview' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Smartphone size={16} />
-              <span>المعاينة على الهاتف (S15)</span>
+              <span>إدارة الصلاحيات والسجل</span>
             </button>
 
           </nav>
@@ -316,9 +319,6 @@ function AppContent() {
           )}
           {currentView === 'permissions-audit' && (
             <PermissionsAuditLog onNavigate={navigateTo} />
-          )}
-          {currentView === 'mobile-preview' && (
-            <MobilePreview onNavigate={navigateTo} />
           )}
           {currentView === 'inspection-details' && (
             <InspectionDetails idInspection={selectedInspectionId} onNavigate={navigateTo} />
