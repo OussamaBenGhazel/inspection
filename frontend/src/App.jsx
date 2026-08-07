@@ -34,19 +34,23 @@ function AppContent() {
   const [teachers, setTeachers] = useState([]);
   const [recentInspections, setRecentInspections] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
+
+  const loadData = async () => {
+    try {
+      const tList = await apiService.getEnseignants();
+      setTeachers(tList);
+      const iList = await apiService.getRecentInspections();
+      setRecentInspections(iList);
+      const stats = await apiService.getDashboardStats();
+      setDashboardStats(stats);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => {
     if (user) {
-      async function loadData() {
-        try {
-          const tList = await apiService.getEnseignants();
-          setTeachers(tList);
-          const iList = await apiService.getRecentInspections();
-          setRecentInspections(iList);
-        } catch (err) {
-          console.error(err);
-        }
-      }
       loadData();
     }
   }, [user]);
@@ -63,6 +67,9 @@ function AppContent() {
       setSelectedTeacher(extra);
     }
     setCurrentView(view);
+    if (view === 'dashboard') {
+      loadData();
+    }
   };
 
   return (
@@ -279,6 +286,8 @@ function AppContent() {
               onNavigate={navigateTo}
               teachers={teachers}
               recentInspections={recentInspections}
+              stats={dashboardStats}
+              refreshStats={loadData}
             />
           )}
           {currentView === 'teachers-list' && (

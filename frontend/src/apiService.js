@@ -1,5 +1,17 @@
 const API_BASE_URL = '/api';
 
+const authFetch = async (url, options = {}) => {
+  const token = localStorage.getItem('token');
+  const headers = options.headers ? { ...options.headers } : {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return fetch(url, {
+    ...options,
+    headers
+  });
+};
+
 export const apiService = {
   login: async (username, password) => {
     const res = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -10,24 +22,27 @@ export const apiService = {
     if (!res.ok) {
       throw new Error(await res.text() || 'خطأ في تسجيل الدخول');
     }
-    // Record login audit event
+    const data = await res.json();
+
+    // Record login audit event with token
     try {
       await fetch(`${API_BASE_URL}/audit-logs?action=تسجيل الدخول&message=قام المستخدم بالولوج إلى لوحة التحكم الرئيسية نجاح&username=${username}`, {
-        method: 'POST'
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${data.token}` }
       });
     } catch (e) {}
 
-    return res.json();
+    return data;
   },
 
   getEnseignants: async () => {
-    const res = await fetch(`${API_BASE_URL}/enseignants`);
+    const res = await authFetch(`${API_BASE_URL}/enseignants`);
     if (!res.ok) throw new Error('Failed to load teachers');
     return res.json();
   },
 
   createEnseignant: async (data) => {
-    const res = await fetch(`${API_BASE_URL}/enseignants`, {
+    const res = await authFetch(`${API_BASE_URL}/enseignants`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -37,7 +52,7 @@ export const apiService = {
   },
 
   updateEnseignant: async (id, data) => {
-    const res = await fetch(`${API_BASE_URL}/enseignants/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/enseignants/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -47,7 +62,7 @@ export const apiService = {
   },
 
   deleteEnseignant: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/enseignants/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/enseignants/${id}`, {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error('Failed to delete teacher');
@@ -55,34 +70,34 @@ export const apiService = {
   },
 
   getInspections: async () => {
-    const res = await fetch(`${API_BASE_URL}/inspections`);
+    const res = await authFetch(`${API_BASE_URL}/inspections`);
     if (!res.ok) throw new Error('Failed to load inspections');
     return res.json();
   },
 
   getRecentInspections: async () => {
-    const res = await fetch(`${API_BASE_URL}/inspections/recent`);
+    const res = await authFetch(`${API_BASE_URL}/inspections/recent`);
     if (!res.ok) throw new Error('Failed to load recent inspections');
     return res.json();
   },
 
   getInspectionDetails: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/inspections/${id}`);
+    const res = await authFetch(`${API_BASE_URL}/inspections/${id}`);
     if (!res.ok) throw new Error('Failed to load inspection details');
     const inspection = await res.json();
 
     // fetch evaluations and pieces as well
-    const evsRes = await fetch(`${API_BASE_URL}/inspections/${id}/evaluations`);
+    const evsRes = await authFetch(`${API_BASE_URL}/inspections/${id}/evaluations`);
     const evs = evsRes.ok ? await evsRes.json() : [];
 
-    const piecesRes = await fetch(`${API_BASE_URL}/inspections/${id}/pieces`);
+    const piecesRes = await authFetch(`${API_BASE_URL}/inspections/${id}/pieces`);
     const pieces = piecesRes.ok ? await piecesRes.json() : [];
 
     return { ...inspection, evaluations: evs, pieces };
   },
 
   createInspection: async (dto) => {
-    const res = await fetch(`${API_BASE_URL}/inspections`, {
+    const res = await authFetch(`${API_BASE_URL}/inspections`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dto)
@@ -92,7 +107,7 @@ export const apiService = {
   },
 
   updateInspection: async (id, dto) => {
-    const res = await fetch(`${API_BASE_URL}/inspections/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/inspections/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(dto)
@@ -102,7 +117,7 @@ export const apiService = {
   },
 
   deleteInspection: async (id) => {
-    const res = await fetch(`${API_BASE_URL}/inspections/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/inspections/${id}`, {
       method: 'DELETE'
     });
     if (!res.ok) throw new Error(await res.text() || 'Failed to delete inspection');
@@ -113,7 +128,7 @@ export const apiService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetch(`${API_BASE_URL}/inspections/${id}/pieces`, {
+    const res = await authFetch(`${API_BASE_URL}/inspections/${id}/pieces`, {
       method: 'POST',
       body: formData
     });
@@ -122,8 +137,14 @@ export const apiService = {
   },
 
   getAuditLogs: async () => {
-    const res = await fetch(`${API_BASE_URL}/audit-logs`);
+    const res = await authFetch(`${API_BASE_URL}/audit-logs`);
     if (!res.ok) throw new Error('Failed to load audit logs');
+    return res.json();
+  },
+
+  getDashboardStats: async () => {
+    const res = await authFetch(`${API_BASE_URL}/inspections/dashboard-stats`);
+    if (!res.ok) throw new Error('Failed to load dashboard statistics');
     return res.json();
   }
 };

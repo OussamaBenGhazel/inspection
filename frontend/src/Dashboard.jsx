@@ -5,14 +5,52 @@ import {
   Star, ChevronRight, MessageSquare, Flame, CheckCircle, FileText
 } from 'lucide-react';
 
-export default function Dashboard({ onNavigate, teachers, recentInspections }) {
+export default function Dashboard({ onNavigate, teachers, recentInspections, stats, refreshStats }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 1. KPI Stats derived dynamically
-  const totalTeachers = teachers.length || 124;
-  const completedVisits = recentInspections.length || 48;
-  const recommendationsCompletionRate = 76; // Screen 1 requirement
-  const overallAvg = "3.2 / 4"; // Screen 1 requirement
+  // 1. KPI Stats derived dynamically from backend stats endpoint
+  const totalTeachers = stats ? stats.totalTeachers : (teachers.length || 124);
+  const completedVisits = stats ? stats.completedVisits : (recentInspections.length || 48);
+  const recommendationsCompletionRate = stats ? stats.recommendationsCompletionRate : 76;
+  const overallAvg = stats ? stats.overallAvg : "3.2 / 4";
+
+  // Level counts
+  const levelCounts = stats ? stats.levelCounts : { expert: 40, satisfactory: 55, developing: 20, needsSupport: 9 };
+  const totalLevels = levelCounts.expert + levelCounts.satisfactory + levelCounts.developing + levelCounts.needsSupport;
+  const percentStableOrDeveloping = totalLevels > 0 ? Math.round(((levelCounts.expert + levelCounts.satisfactory + levelCounts.developing) / totalLevels) * 100) : 83;
+
+  // Evolution weeks
+  const evolutionWeeks = stats ? stats.evolutionWeeks : [
+    { week: "الأسبوع 1", avg: 2.8 },
+    { week: "الأسبوع 2", avg: 3.0 },
+    { week: "الأسبوع 3", avg: 3.1 },
+    { week: "الأسبوع 4", avg: 3.2 }
+  ];
+
+  // Recent activities
+  const recentActivities = stats ? stats.recentActivities : [
+    {
+      type: "زيارة تقييمية",
+      title: "تم اعتماد زيارة للأستاذة سناء بن عمر",
+      desc: "تم تسجيل كافة تقييمات الكفايات الثمانية بنجاح.",
+      region: "المندوبية الجهوية بقابس",
+      time: "اليوم"
+    },
+    {
+      type: "توصية جديدة",
+      title: "إضافة خطة دعم في إدارة الصف",
+      desc: "تم إشراك الأستاذ صالح البكوش في ورشة عمل جهوية.",
+      region: "المندوبية الجهوية بصفاقس",
+      time: "أمس"
+    },
+    {
+      type: "تقرير جماعي",
+      title: "تصدير تقرير الأداء ربع السنوي",
+      desc: "تمت مشاركة النتائج والتحاليل مع المندوب الجهوي.",
+      region: "صيغة PDF مدمجة",
+      time: "هذا الأسبوع"
+    }
+  ];
 
   return (
     <div className="space-y-8" dir="rtl">
@@ -121,16 +159,16 @@ export default function Dashboard({ onNavigate, teachers, recentInspections }) {
         <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
           <div>
             <h3 className="text-sm font-bold text-slate-800">توزيع مستويات الأداء (كفايات الأساتذة)</h3>
-            <p className="text-xs text-slate-400 mt-0.5">تقييم تفصيلي من أصل 124 معلماً نشطاً</p>
+            <p className="text-xs text-slate-400 mt-0.5">تقييم تفصيلي من أصل {totalTeachers} معلماً نشطاً</p>
           </div>
 
           <div className="my-6 flex items-center justify-center">
-            <div className="relative h-40 w-40 rounded-full border-12 border-emerald-500 flex items-center justify-center">
+            <div className="relative h-40 w-40 rounded-full border-12 border-emerald-500 flex items-center justify-center animate-spin-slow">
               <div className="absolute inset-0 rounded-full border-12 border-blue-500 rotate-90" />
               <div className="absolute inset-0 rounded-full border-12 border-yellow-400 rotate-180" />
               <div className="absolute inset-0 rounded-full border-12 border-red-500 rotate-270" />
-              <div className="text-center">
-                <span className="text-2xl font-extrabold text-slate-800">83%</span>
+              <div className="text-center rotate-0">
+                <span className="text-2xl font-extrabold text-slate-800">{percentStableOrDeveloping}%</span>
                 <p className="text-[10px] text-slate-400 font-bold">مستقر أو متطور</p>
               </div>
             </div>
@@ -139,19 +177,19 @@ export default function Dashboard({ onNavigate, teachers, recentInspections }) {
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-emerald-500 shrink-0" />
-              <span className="font-semibold text-slate-600">متقن (40 أستاذ)</span>
+              <span className="font-semibold text-slate-600">متقن ({levelCounts.expert} أستاذ)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-blue-500 shrink-0" />
-              <span className="font-semibold text-slate-600">مرضٍ (55 أستاذ)</span>
+              <span className="font-semibold text-slate-600">مرضٍ ({levelCounts.satisfactory} أستاذ)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-yellow-400 shrink-0" />
-              <span className="font-semibold text-slate-600">في طور التمكن (20 أستاذ)</span>
+              <span className="font-semibold text-slate-600">في طور التمكن ({levelCounts.developing} أستاذ)</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3 rounded-full bg-red-500 shrink-0" />
-              <span className="font-semibold text-slate-600">يحتاج دعماً (9 أساتذة)</span>
+              <span className="font-semibold text-slate-600">يحتاج دعماً ({levelCounts.needsSupport} أساتذة)</span>
             </div>
           </div>
         </div>
@@ -169,27 +207,23 @@ export default function Dashboard({ onNavigate, teachers, recentInspections }) {
             <div className="absolute inset-x-0 top-2/4 border-b border-dashed border-slate-100" />
             <div className="absolute inset-x-0 top-3/4 border-b border-dashed border-slate-100" />
 
-            {/* Simulated Line Sparkles */}
-            <div className="flex-1 flex flex-col items-center gap-2 z-10">
-              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">2.8</span>
-              <div className="w-4 bg-blue-500 rounded-t h-16 transition-all duration-500 hover:bg-blue-600" />
-              <span className="text-[10px] text-slate-400 font-bold">الأسبوع 1</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 z-10">
-              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">3.0</span>
-              <div className="w-4 bg-blue-500 rounded-t h-24 transition-all duration-500 hover:bg-blue-600" />
-              <span className="text-[10px] text-slate-400 font-bold">الأسبوع 2</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 z-10">
-              <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">3.1</span>
-              <div className="w-4 bg-blue-500 rounded-t h-28 transition-all duration-500 hover:bg-blue-600" />
-              <span className="text-[10px] text-slate-400 font-bold">الأسبوع 3</span>
-            </div>
-            <div className="flex-1 flex flex-col items-center gap-2 z-10">
-              <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">3.2</span>
-              <div className="w-4 bg-emerald-500 rounded-t h-32 transition-all duration-500 hover:bg-emerald-600" />
-              <span className="text-[10px] text-slate-400 font-bold">الأسبوع 4</span>
-            </div>
+            {evolutionWeeks.map((ew, idx) => {
+              // Convert 4.0 scale to percentage height
+              const score = parseFloat(ew.avg);
+              const heightPercent = score ? Math.round((score / 4.0) * 100) : 70;
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-2 z-10">
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${idx === evolutionWeeks.length - 1 ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50'}`}>
+                    {ew.avg}
+                  </span>
+                  <div
+                    style={{ height: `${heightPercent * 1.1}px` }}
+                    className={`w-4 rounded-t transition-all duration-500 ${idx === evolutionWeeks.length - 1 ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                  />
+                  <span className="text-[10px] text-slate-400 font-bold">{ew.week}</span>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex items-center justify-between text-xs text-slate-400 font-bold">
@@ -216,35 +250,28 @@ export default function Dashboard({ onNavigate, teachers, recentInspections }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 space-y-2 hover:bg-blue-50/30 transition">
-            <div className="flex items-center justify-between">
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-extrabold rounded-full">زيارة تقييمية</span>
-              <span className="text-[10px] text-slate-400 font-bold">اليوم</span>
-            </div>
-            <h4 className="text-xs font-bold text-slate-800">تم اعتماد زيارة للأستاذة سناء بن عمر</h4>
-            <p className="text-[11px] text-slate-500">تم تسجيل كافة تقييمات الكفايات الثمانية بنجاح.</p>
-            <span className="text-[10px] font-bold text-slate-400 block pt-1">المندوبية الجهوية بقابس</span>
-          </div>
-
-          <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 space-y-2 hover:bg-amber-50/30 transition">
-            <div className="flex items-center justify-between">
-              <span className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-extrabold rounded-full">توصية جديدة</span>
-              <span className="text-[10px] text-slate-400 font-bold">أمس</span>
-            </div>
-            <h4 className="text-xs font-bold text-slate-800">إضافة خطة دعم في إدارة الصف</h4>
-            <p className="text-[11px] text-slate-500">تم إشراك الأستاذ صالح البكوش في ورشة عمل جهوية.</p>
-            <span className="text-[10px] font-bold text-slate-400 block pt-1">المندوبية الجهوية بصفاقس</span>
-          </div>
-
-          <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 space-y-2 hover:bg-purple-50/30 transition">
-            <div className="flex items-center justify-between">
-              <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-extrabold rounded-full">تقرير جماعي</span>
-              <span className="text-[10px] text-slate-400 font-bold">هذا الأسبوع</span>
-            </div>
-            <h4 className="text-xs font-bold text-slate-800">تصدير تقرير الأداء ربع السنوي</h4>
-            <p className="text-[11px] text-slate-500">تمت مشاركة النتائج والتحاليل مع المندوب الجهوي.</p>
-            <span className="text-[10px] font-bold text-slate-400 block pt-1">صيغة PDF مدمجة</span>
-          </div>
+          {recentActivities.slice(0, 3).map((act, idx) => {
+            let badgeBg = "bg-blue-50 text-blue-600";
+            let hoverBg = "hover:bg-blue-50/30";
+            if (idx === 1) {
+              badgeBg = "bg-amber-50 text-amber-600";
+              hoverBg = "hover:bg-amber-50/30";
+            } else if (idx === 2) {
+              badgeBg = "bg-purple-50 text-purple-600";
+              hoverBg = "hover:bg-purple-50/30";
+            }
+            return (
+              <div key={idx} className={`p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 space-y-2 ${hoverBg} transition`}>
+                <div className="flex items-center justify-between">
+                  <span className={`px-2 py-0.5 text-[10px] font-extrabold rounded-full ${badgeBg}`}>{act.type}</span>
+                  <span className="text-[10px] text-slate-400 font-bold">{act.time === "ouverte" ? "مفتوحة" : act.time === "en_cours" ? "قيد المعالجة" : act.time === "cloturee" ? "مغلقة" : act.time}</span>
+                </div>
+                <h4 className="text-xs font-bold text-slate-800">{act.title}</h4>
+                <p className="text-[11px] text-slate-500">{act.desc}</p>
+                <span className="text-[10px] font-bold text-slate-400 block pt-1">{act.region}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
