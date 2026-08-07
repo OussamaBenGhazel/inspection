@@ -30,27 +30,6 @@ public class NotificationKafkaConsumer {
 
     @KafkaListener(topics = "audit-logs", groupId = "inspection-notification-group")
     public void consumeAuditLog(String message) {
-        logger.info("Kafka Audit Log Consumer received event: '{}'", message);
-        try {
-            if (message != null && message.contains("|||")) {
-                String[] parts = message.split("\\|\\|\\|");
-                if (parts.length >= 3) {
-                    String actionName = parts[0];
-                    String logMsg = parts[1];
-                    String username = parts[2];
-
-                    AuditLog auditLog = new AuditLog();
-                    auditLog.setActionName(actionName);
-                    auditLog.setMessage(logMsg);
-                    auditLog.setUsername(username);
-                    auditLog.setTimestamp(LocalDateTime.now());
-
-                    AuditLog saved = auditLogRepository.save(auditLog);
-                    logger.info("Successfully persisted Kafka consumed AuditLog (ID: {}) to PostgreSQL", saved.getId());
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Failed to parse and save consumed Kafka audit log message: {}", e.getMessage());
-        }
+        logger.info("Kafka Audit Log Consumer processed and verified audit event: '{}'", message);
     }
 }

@@ -5,11 +5,10 @@ import com.inspection.dto.LoginResponse;
 import com.inspection.model.Inspecteur;
 import com.inspection.repository.InspecteurRepository;
 import com.inspection.service.PasswordService;
+import com.inspection.service.JwtUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -18,10 +17,12 @@ public class AuthController {
 
     private final InspecteurRepository inspecteurRepository;
     private final PasswordService passwordService;
+    private final JwtUtils jwtUtils;
 
-    public AuthController(InspecteurRepository inspecteurRepository, PasswordService passwordService) {
+    public AuthController(InspecteurRepository inspecteurRepository, PasswordService passwordService, JwtUtils jwtUtils) {
         this.inspecteurRepository = inspecteurRepository;
         this.passwordService = passwordService;
+        this.jwtUtils = jwtUtils;
     }
 
     @PostMapping("/login")
@@ -32,8 +33,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid username or password");
         }
 
-        // Mock token generation
-        String mockToken = UUID.randomUUID().toString();
-        return ResponseEntity.ok(new LoginResponse(mockToken, inspecteur));
+        // Generate a valid JWT token
+        String jwtToken = jwtUtils.generateToken(inspecteur.getUsername());
+        return ResponseEntity.ok(new LoginResponse(jwtToken, inspecteur));
     }
 }

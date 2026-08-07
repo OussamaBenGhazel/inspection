@@ -65,15 +65,29 @@ public class InspectionApplicationTests {
                 .andExpect(status().isUnauthorized());
     }
 
+    private String obtainAccessToken() throws Exception {
+        String loginJson = "{\"username\": \"admin\", \"password\": \"admin\"}";
+        String response = mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(loginJson))
+                .andReturn().getResponse().getContentAsString();
+
+        com.fasterxml.jackson.databind.JsonNode root = objectMapper.readTree(response);
+        return root.path("token").asText();
+    }
+
     @Test
     public void testGetEnseignants() throws Exception {
-        mockMvc.perform(get("/api/enseignants"))
+        String token = obtainAccessToken();
+        mockMvc.perform(get("/api/enseignants")
+                .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
     @Test
     public void testCreateAndGetInspection() throws Exception {
+        String token = obtainAccessToken();
         List<Inspecteur> inspecteurs = inspecteurRepository.findAll();
         List<Enseignant> enseignants = enseignantRepository.findAll();
 
@@ -97,6 +111,7 @@ public class InspectionApplicationTests {
         String requestBody = objectMapper.writeValueAsString(dto);
 
         mockMvc.perform(post("/api/inspections")
+                .header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
                 .andExpect(status().isOk())
