@@ -124,7 +124,7 @@ export default function InspectionDetails({ idInspection, onNavigate }) {
 
         <div className="flex items-center gap-3">
           <a
-            href={`/api/inspections/${idInspection}/report`}
+            href={`/api/inspections/${idInspection}/report?token=${localStorage.getItem('token')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition"

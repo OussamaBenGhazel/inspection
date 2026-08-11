@@ -39,11 +39,12 @@ export default function ReportsExport({ onNavigate }) {
       alert('يرجى تحديد زيارة ميدانية أولاً لتوليد التقرير.');
       return;
     }
-    // Directly navigate or trigger download of the real dynamic PDF report from the backend!
-    window.open(`/api/inspections/${selectedInspectionId}/report`, '_blank');
+    const token = localStorage.getItem('token');
+    window.open(`/api/inspections/${selectedInspectionId}/report?token=${token}`, '_blank');
   };
 
   const handleExport = (format) => {
+    const token = localStorage.getItem('token');
     if (format === 'pdf') {
       handlePdfDownload();
     } else if (format === 'excel') {
@@ -51,7 +52,7 @@ export default function ReportsExport({ onNavigate }) {
         alert('يرجى تحديد زيارة ميدانية أولاً لتوليد التقرير.');
         return;
       }
-      window.open(`/api/inspections/${selectedInspectionId}/excel`, '_blank');
+      window.open(`/api/inspections/${selectedInspectionId}/excel?token=${token}`, '_blank');
     } else {
       alert(`جاري تصدير التقرير البيداغوجي الموحد بصيغة ${format.toUpperCase()} (محاكاة)...`);
     }
