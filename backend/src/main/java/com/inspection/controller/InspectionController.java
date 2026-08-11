@@ -398,4 +398,48 @@ public class InspectionController {
 
         return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
+
+    @GetMapping("/{id}/excel")
+    public ResponseEntity<byte[]> getExcelReport(@PathVariable Long id) {
+        Inspection inspection = inspectionRepository.findById(id).orElse(null);
+        if (inspection == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        StringBuilder csv = new StringBuilder();
+        // UTF-8 BOM
+        csv.append("\uFEFF");
+        // Headers
+        csv.append("الخاصية,القيمة\n");
+        csv.append("رقم الزيارة,").append(inspection.getIdInspection()).append("\n");
+        csv.append("تاريخ الزيارة,").append(inspection.getDateVisite()).append("\n");
+        csv.append("وقت البدء,").append(inspection.getHeureDebut()).append("\n");
+        csv.append("وقت الانتهاء,").append(inspection.getHeureFin()).append("\n");
+        csv.append("المتفقد المشرف,").append(inspection.getInspecteur().getPrenom()).append(" ").append(inspection.getInspecteur().getNom()).append("\n");
+        csv.append("المستفيد (الأستاذ),").append(inspection.getEnseignant().getPrenom()).append(" ").append(inspection.getEnseignant().getNom()).append("\n");
+        csv.append("المادة,").append(inspection.getEnseignant().getMatiere()).append("\n");
+        csv.append("حالة الزيارة,").append(inspection.getStatut().name()).append("\n");
+
+        String remarks = inspection.getRemarquesGenerales() != null ? inspection.getRemarquesGenerales().replace(",", "،").replace("\n", " ") : "";
+        csv.append("الملاحظات العامة,").append(remarks).append("\n");
+        csv.append("\n");
+        csv.append("الكفاية / المعيار,الدرجة / 10,الملاحظة التقييمية\n");
+
+        List<Evaluation> evs = evaluationRepository.findByInspectionIdInspection(id);
+        for (Evaluation ev : evs) {
+            String comment = ev.getCommentaire() != null ? ev.getCommentaire().replace(",", "،").replace("\n", " ") : "";
+            csv.append(ev.getCritere()).append(",")
+               .append(ev.getNote()).append(",")
+               .append(comment).append("\n");
+        }
+
+        byte[] csvBytes = csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
+        headers.setContentDispositionFormData("attachment", "inspection-report-" + id + ".csv");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
+    }
 }

@@ -5,7 +5,7 @@ import {
   Star, ChevronRight, MessageSquare, Flame, CheckCircle, FileText
 } from 'lucide-react';
 
-export default function Dashboard({ onNavigate, teachers, recentInspections, stats, refreshStats }) {
+export default function Dashboard({ onNavigate, teachers, recentInspections, stats, refreshStats, unreadNotificationsCount }) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // 1. KPI Stats derived dynamically from backend stats endpoint
@@ -88,7 +88,7 @@ export default function Dashboard({ onNavigate, teachers, recentInspections, sta
           >
             <Bell size={18} />
             <span className="absolute -top-1.5 -left-1.5 h-5 w-5 bg-red-500 text-white text-[10px] font-extrabold rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
-              12
+              {unreadNotificationsCount !== undefined ? unreadNotificationsCount : 12}
             </span>
           </button>
         </div>

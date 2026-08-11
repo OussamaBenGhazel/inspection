@@ -35,6 +35,7 @@ function AppContent() {
   const [recentInspections, setRecentInspections] = useState([]);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
   const loadData = async () => {
     try {
@@ -44,6 +45,12 @@ function AppContent() {
       setRecentInspections(iList);
       const stats = await apiService.getDashboardStats();
       setDashboardStats(stats);
+      try {
+        const count = await apiService.getUnreadNotificationsCount();
+        setUnreadNotificationsCount(count);
+      } catch (e) {
+        console.warn('Could not load unread count:', e);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -288,6 +295,7 @@ function AppContent() {
               recentInspections={recentInspections}
               stats={dashboardStats}
               refreshStats={loadData}
+              unreadNotificationsCount={unreadNotificationsCount}
             />
           )}
           {currentView === 'teachers-list' && (

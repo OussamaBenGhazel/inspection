@@ -5,10 +5,12 @@ import com.inspection.model.Inspecteur;
 import com.inspection.model.Inspection;
 import com.inspection.model.InspectionStatut;
 import com.inspection.model.Evaluation;
+import com.inspection.model.Notification;
 import com.inspection.repository.EnseignantRepository;
 import com.inspection.repository.InspecteurRepository;
 import com.inspection.repository.InspectionRepository;
 import com.inspection.repository.EvaluationRepository;
+import com.inspection.repository.NotificationRepository;
 import com.inspection.service.PasswordService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +29,7 @@ public class SeedConfig {
             EnseignantRepository enseignantRepository,
             InspectionRepository inspectionRepository,
             EvaluationRepository evaluationRepository,
+            NotificationRepository notificationRepository,
             PasswordService passwordService) {
         return args -> {
             if (inspecteurRepository.count() == 0) {
@@ -91,6 +94,14 @@ public class SeedConfig {
                 }
 
                 System.out.println("Default inspections and evaluations seeded.");
+            }
+
+            if (notificationRepository.count() == 0) {
+                notificationRepository.save(new Notification("مواعيد التفقد", "تذكير بزيارة تفقدية مبرمجة للأستاذ صالح البكوش", "موعد الزيارة مقرر غداً في تمام الساعة 08:30 صباحاً بمقر المدرسة الإعدادية بالرياض.", "high", false));
+                notificationRepository.save(new Notification("التقييم البيداغوجي", "تم إضافة تقييم كفايات جديد بنجاح", "قامت المتفقدة آمنة فرحات باعتماد التقييمات الرقمية لزيارة المعلمة سناء بن عمر.", "normal", false));
+                notificationRepository.save(new Notification("متابعة التوصيات", "توصية تجاوزت السقف الزمني المحدد لتطبيقها", "توصية 'تفعيل بطاقات التقويم التكويني السريع' للأستاذ سليم الهرماسي بحاجة لمتابعة عاجلة.", "critical", false));
+                notificationRepository.save(new Notification("خطة النمو", "تحديث أهداف خطة النمو الشخصية", "الأستاذة ليلى المنصوري قامت بتعيين هدف تنمية رقمي جديد للربع السنوي القادم.", "normal", false));
+                System.out.println("Default notifications seeded successfully.");
             }
         };
     }

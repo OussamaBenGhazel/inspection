@@ -24,13 +24,11 @@ export const apiService = {
     }
     const data = await res.json();
 
-    // Record login audit event with token
-    try {
-      await fetch(`${API_BASE_URL}/audit-logs?action=تسجيل الدخول&message=قام المستخدم بالولوج إلى لوحة التحكم الرئيسية نجاح&username=${username}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${data.token}` }
-      });
-    } catch (e) {}
+    // Record login audit event with token asynchronously (fire-and-forget) to speed up login process
+    fetch(`${API_BASE_URL}/audit-logs?action=تسجيل الدخول&message=قام المستخدم بالولوج إلى لوحة التحكم الرئيسية نجاح&username=${username}`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${data.token}` }
+    }).catch(err => console.warn('Async audit logging failed:', err));
 
     return data;
   },
@@ -146,5 +144,33 @@ export const apiService = {
     const res = await authFetch(`${API_BASE_URL}/inspections/dashboard-stats`);
     if (!res.ok) throw new Error('Failed to load dashboard statistics');
     return res.json();
+  },
+
+  getNotifications: async () => {
+    const res = await authFetch(`${API_BASE_URL}/notifications`);
+    if (!res.ok) throw new Error('Failed to load notifications');
+    return res.json();
+  },
+
+  getUnreadNotificationsCount: async () => {
+    const res = await authFetch(`${API_BASE_URL}/notifications/unread/count`);
+    if (!res.ok) throw new Error('Failed to load unread count');
+    return res.json();
+  },
+
+  markNotificationAsRead: async (id) => {
+    const res = await authFetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error('Failed to mark notification as read');
+    return res.json();
+  },
+
+  markAllNotificationsAsRead: async () => {
+    const res = await authFetch(`${API_BASE_URL}/notifications/read-all`, {
+      method: 'POST'
+    });
+    if (!res.ok) throw new Error('Failed to mark all notifications as read');
+    return true;
   }
 };

@@ -46,6 +46,12 @@ export default function ReportsExport({ onNavigate }) {
   const handleExport = (format) => {
     if (format === 'pdf') {
       handlePdfDownload();
+    } else if (format === 'excel') {
+      if (!selectedInspectionId) {
+        alert('يرجى تحديد زيارة ميدانية أولاً لتوليد التقرير.');
+        return;
+      }
+      window.open(`/api/inspections/${selectedInspectionId}/excel`, '_blank');
     } else {
       alert(`جاري تصدير التقرير البيداغوجي الموحد بصيغة ${format.toUpperCase()} (محاكاة)...`);
     }
