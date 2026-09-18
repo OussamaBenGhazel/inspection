@@ -118,4 +118,40 @@ public class InspectionApplicationTests {
                 .andExpect(jsonPath("$.statut").value("ouverte"))
                 .andExpect(jsonPath("$.remarquesGenerales").value("ممتاز"));
     }
+
+    @Test
+    public void testGetPdfReport() throws Exception {
+        String token = obtainAccessToken();
+        List<Inspection> inspections = inspectionRepository.findAll();
+        assertThat(inspections).isNotEmpty();
+        Long id = inspections.get(0).getIdInspection();
+
+        mockMvc.perform(get("/api/inspections/" + id + "/report")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+
+        // Test with query parameter token
+        mockMvc.perform(get("/api/inspections/" + id + "/report?token=" + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+    }
+
+    @Test
+    public void testGetExcelReport() throws Exception {
+        String token = obtainAccessToken();
+        List<Inspection> inspections = inspectionRepository.findAll();
+        assertThat(inspections).isNotEmpty();
+        Long id = inspections.get(0).getIdInspection();
+
+        mockMvc.perform(get("/api/inspections/" + id + "/excel")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+
+        // Test with query parameter token
+        mockMvc.perform(get("/api/inspections/" + id + "/excel?token=" + token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+    }
 }

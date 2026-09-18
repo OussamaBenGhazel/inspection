@@ -8,4 +8,5 @@ import java.util.List;
 @Repository
 public interface InspectionRepository extends JpaRepository<Inspection, Long> {
     List<Inspection> findTop5ByOrderByDateCreationDesc();
+    List<Inspection> findByEnseignantId(Long idEnseignant);
 }

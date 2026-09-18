@@ -122,15 +122,24 @@ export default function InspectionDetails({ idInspection, onNavigate }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <a
             href={`/api/inspections/${idInspection}/report?token=${localStorage.getItem('token')}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-100 transition"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl shadow-sm transition"
           >
-            <FileText size={18} />
-            <span>تصدير تقرير PDF</span>
+            <FileText size={16} />
+            <span>تقرير PDF رسمي 📕</span>
+          </a>
+          <a
+            href={`/api/inspections/${idInspection}/excel?token=${localStorage.getItem('token')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl shadow-sm transition"
+          >
+            <Download size={16} />
+            <span>تصدير Excel 📗</span>
           </a>
         </div>
       </div>

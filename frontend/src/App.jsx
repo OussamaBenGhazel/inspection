@@ -132,162 +132,87 @@ function AppContent() {
       </header>
 
       {/* Main Layout */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8 relative z-10">
+      {/* Main Layout Container */}
+      <div className="flex-1 max-w-[1480px] w-full mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6 relative z-10">
 
-        {/* Responsive, Complete Sidebar for All 14 Screens (without S15) */}
+        {/* Prototype Web Sidebar */}
         <aside className="w-full lg:w-72 shrink-0">
-          <nav className="bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-slate-100 shadow-sm space-y-1.5 sticky top-24 max-h-[85vh] overflow-y-auto">
+          <div className="web-sidebar shadow-xl sticky top-6">
+            <div className="logo-block">
+              <div className="logo-title">متابعة التطور المهني</div>
+              <div className="logo-subtitle">أساتذة التربية المدنية</div>
+            </div>
+            <div className="text-xs text-[#eff8fb]/70 font-semibold mb-4 pr-1">السنة الدراسية 2026/2027</div>
 
-            <div className="text-[10px] text-slate-400 font-extrabold uppercase px-4 pb-2 border-b border-slate-100 mb-2">القائمة والواجهات</div>
+            <nav className="space-y-2">
+              {/* Screen 1 */}
+              <div
+                onClick={() => navigateTo('dashboard')}
+                className={`menu-item ${currentView === 'dashboard' ? 'active' : ''}`}
+              >
+                <LayoutDashboard size={17} />
+                <span>لوحة التحكم</span>
+              </div>
 
-            {/* Screen 1 */}
-            <button
-              onClick={() => navigateTo('dashboard')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'dashboard' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <LayoutDashboard size={16} />
-              <span>لوحة التحكم الرئيسية</span>
-            </button>
+              {/* Screen 2 & 3 */}
+              <div
+                onClick={() => navigateTo('teachers-list')}
+                className={`menu-item ${currentView === 'teachers-list' || currentView === 'teacher-profile' ? 'active' : ''}`}
+              >
+                <ListFilter size={17} />
+                <span>الأساتذة</span>
+              </div>
 
-            {/* Screen 2 */}
-            <button
-              onClick={() => navigateTo('teachers-list')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'teachers-list' || currentView === 'teacher-profile' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <ListFilter size={16} />
-              <span>قائمة الأساتذة</span>
-            </button>
+              {/* Screen 4 */}
+              <div
+                onClick={() => navigateTo('new-inspection')}
+                className={`menu-item ${currentView === 'new-inspection' ? 'active' : ''}`}
+              >
+                <PlusCircle size={17} />
+                <span>الزيارات</span>
+              </div>
 
-            {/* Screen 4 */}
-            <button
-              onClick={() => navigateTo('new-inspection')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'new-inspection' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <PlusCircle size={16} />
-              <span>تسجيل زيارة ميدانية</span>
-            </button>
+              {/* Screen 5 */}
+              <div
+                onClick={() => navigateTo('competencies-board')}
+                className={`menu-item ${currentView === 'competencies-board' ? 'active' : ''}`}
+              >
+                <Award size={17} />
+                <span>التقييمات</span>
+              </div>
 
-            {/* Screen 5 */}
-            <button
-              onClick={() => navigateTo('competencies-board')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'competencies-board' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Award size={16} />
-              <span>لوحة الكفايات الثمانية</span>
-            </button>
+              {/* Screen 7 */}
+              <div
+                onClick={() => navigateTo('recommendations-tracking')}
+                className={`menu-item ${currentView === 'recommendations-tracking' ? 'active' : ''}`}
+              >
+                <CheckSquare size={17} />
+                <span>التوصيات</span>
+              </div>
 
-            {/* Screen 6 */}
-            <button
-              onClick={() => navigateTo('performance-evolution')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'performance-evolution' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <TrendingUp size={16} />
-              <span>تحليل تطور الأداء</span>
-            </button>
+              {/* Screen 12 */}
+              <div
+                onClick={() => navigateTo('reports-export')}
+                className={`menu-item ${currentView === 'reports-export' ? 'active' : ''}`}
+              >
+                <FileSpreadsheet size={17} />
+                <span>التقارير</span>
+              </div>
 
-            {/* Screen 7 */}
-            <button
-              onClick={() => navigateTo('recommendations-tracking')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'recommendations-tracking' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <CheckSquare size={16} />
-              <span>تتبع التوصيات البيداغوجية</span>
-            </button>
-
-            {/* Screen 8 */}
-            <button
-              onClick={() => navigateTo('professional-indicators')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'professional-indicators' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Target size={16} />
-              <span>مؤشرات النمو المهني</span>
-            </button>
-
-            {/* Screen 9 */}
-            <button
-              onClick={() => navigateTo('growth-roadmap')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'growth-roadmap' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Settings size={16} />
-              <span>خطة النمو الشخصية</span>
-            </button>
-
-            {/* Screen 10 */}
-            <button
-              onClick={() => navigateTo('quantitative-indicators')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'quantitative-indicators' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Eye size={16} />
-              <span>المؤشرات الكمية للتطور</span>
-            </button>
-
-            {/* Screen 11 */}
-            <button
-              onClick={() => navigateTo('final-diagnosis')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'final-diagnosis' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <HelpCircle size={16} />
-              <span>التشخيص الختامي</span>
-            </button>
-
-            {/* Screen 12 */}
-            <button
-              onClick={() => navigateTo('reports-export')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'reports-export' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <FileSpreadsheet size={16} />
-              <span>التقارير والتصدير</span>
-            </button>
-
-            {/* Screen 13 */}
-            <button
-              onClick={() => navigateTo('notifications-alerts')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'notifications-alerts' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Bell size={16} />
-              <span>الإشعارات والتنبيهات</span>
-            </button>
-
-            {/* Screen 14 */}
-            <button
-              onClick={() => navigateTo('permissions-audit')}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-extrabold text-xs transition ${
-                currentView === 'permissions-audit' ? 'bg-blue-600 text-white shadow-lg shadow-blue-100' : 'text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              <Shield size={16} />
-              <span>إدارة الصلاحيات والسجل</span>
-            </button>
-
-          </nav>
+              {/* Screen 14 */}
+              <div
+                onClick={() => navigateTo('permissions-audit')}
+                className={`menu-item ${currentView === 'permissions-audit' ? 'active' : ''}`}
+              >
+                <Shield size={17} />
+                <span>الإعدادات</span>
+              </div>
+            </nav>
+          </div>
         </aside>
 
         {/* Content Section */}
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 bg-[#f7fbfc] p-6 rounded-[28px] border border-[var(--line)] shadow-sm">
           {currentView === 'dashboard' && (
             <Dashboard
               onNavigate={navigateTo}

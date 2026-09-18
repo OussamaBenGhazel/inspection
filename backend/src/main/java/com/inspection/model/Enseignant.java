@@ -1,75 +1,74 @@
 package com.inspection.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "enseignants")
-public class Enseignant {
+@PrimaryKeyJoinColumn(name = "id_enseignant")
+public class Enseignant extends Utilisateur {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_enseignant")
-    private Long idEnseignant;
-
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "nom", nullable = false, length = 100)
-    private String nom;
-
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "prenom", nullable = false, length = 100)
-    private String prenom;
-
-    @NotBlank
-    @Size(max = 100)
+    @NotBlank(message = "المادة الدراسية إجبارية")
+    @Size(max = 100, message = "اسم المادة يجب ألا يتجاوز 100 حرف")
     @Column(name = "matiere", nullable = false, length = 100)
-    private String matiere;
+    private String matiere; // e.g. "التربية المدنية"
 
-    @Email
-    @Size(max = 150)
-    @Column(name = "email", length = 150)
-    private String email;
-
-    @Size(max = 20)
+    @Pattern(regexp = "^(\\+216)?[0-9]{8}$", message = "رقم الهاتف يجب أن يتكون من 8 أرقام صحيحة")
     @Column(name = "telephone", length = 20)
     private String telephone;
 
-    public Enseignant() {}
+    @ManyToOne
+    @JoinColumn(name = "id_etablissement")
+    private Etablissement etablissement;
 
-    public Enseignant(String nom, String prenom, String matiere, String email, String telephone) {
-        this.nom = nom;
-        this.prenom = prenom;
+    @ManyToOne
+    @JoinColumn(name = "id_region")
+    private Region region;
+
+    @Column(name = "date_recrutement")
+    private LocalDate dateRecrutement;
+
+    @Column(name = "anciennete")
+    private Integer anciennete; // in years
+
+    @Size(max = 50)
+    @Column(name = "statut", length = 50)
+    private String statut; // e.g. "مترسم", "متربص", "متعاقد"
+
+    public Enseignant() {
+        super();
+        setRole("enseignant");
+    }
+
+    public Enseignant(String nom, String prenom, String email, String motDePasse, String matiere, String telephone, Etablissement etablissement, Region region, LocalDate dateRecrutement, Integer anciennete, String statut) {
+        super(nom, prenom, email, motDePasse, "enseignant");
         this.matiere = matiere;
-        this.email = email;
         this.telephone = telephone;
+        this.etablissement = etablissement;
+        this.region = region;
+        this.dateRecrutement = dateRecrutement;
+        this.anciennete = anciennete;
+        this.statut = statut;
+    }
+
+    // Backward-compatible constructor
+    public Enseignant(String nom, String prenom, String matiere, String email, String telephone) {
+        super(nom, prenom, email != null ? email : (prenom.toLowerCase() + "." + nom.toLowerCase() + "@education.tn"), "defaultPass123", "enseignant");
+        this.matiere = matiere;
+        this.telephone = telephone;
+        this.anciennete = 10;
+        this.statut = "مترسم";
     }
 
     public Long getIdEnseignant() {
-        return idEnseignant;
+        return getId();
     }
 
     public void setIdEnseignant(Long idEnseignant) {
-        this.idEnseignant = idEnseignant;
-    }
-
-    public String getNom() {
-        return nom;
-    }
-
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
-    public String getPrenom() {
-        return prenom;
-    }
-
-    public void setPrenom(String prenom) {
-        this.prenom = prenom;
+        setId(idEnseignant);
     }
 
     public String getMatiere() {
@@ -80,19 +79,51 @@ public class Enseignant {
         this.matiere = matiere;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getTelephone() {
         return telephone;
     }
 
     public void setTelephone(String telephone) {
         this.telephone = telephone;
+    }
+
+    public Etablissement getEtablissement() {
+        return etablissement;
+    }
+
+    public void setEtablissement(Etablissement etablissement) {
+        this.etablissement = etablissement;
+    }
+
+    public Region getRegion() {
+        return region;
+    }
+
+    public void setRegion(Region region) {
+        this.region = region;
+    }
+
+    public LocalDate getDateRecrutement() {
+        return dateRecrutement;
+    }
+
+    public void setDateRecrutement(LocalDate dateRecrutement) {
+        this.dateRecrutement = dateRecrutement;
+    }
+
+    public Integer getAnciennete() {
+        return anciennete;
+    }
+
+    public void setAnciennete(Integer anciennete) {
+        this.anciennete = anciennete;
+    }
+
+    public String getStatut() {
+        return statut;
+    }
+
+    public void setStatut(String statut) {
+        this.statut = statut;
     }
 }

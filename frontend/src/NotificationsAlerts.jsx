@@ -9,47 +9,10 @@ export default function NotificationsAlerts({ onNavigate }) {
   const fetchNotifications = async () => {
     try {
       const data = await apiService.getNotifications();
-      const fallback = [
-        {
-          id: 1,
-          category: "مواعيد التفقد",
-          title: "تذكير بزيارة تفقدية مبرمجة للأستاذ صالح البكوش",
-          message: "موعد الزيارة مقرر غداً في تمام الساعة 08:30 صباحاً بمقر المدرسة الإعدادية بالرياض.",
-          urgency: "high",
-          readStatus: false
-        },
-        {
-          id: 2,
-          category: "التقييم البيداغوجي",
-          title: "تم إضافة تقييم كفايات جديد بنجاح",
-          message: "قامت المتفقدة آمنة فرحات باعتماد التقييمات الرقمية لزيارة المعلمة سناء بن عمر.",
-          urgency: "normal",
-          readStatus: false
-        },
-        {
-          id: 3,
-          category: "متابعة التوصيات",
-          title: "توصية تجاوزت السقف الزمني المحدد لتطبيقها",
-          message: "توصية 'تفعيل بطاقات التقويم التكويني السريع' للأستاذ سليم الهرماسي بحاجة لمتابعة عاجلة.",
-          urgency: "critical",
-          readStatus: false
-        },
-        {
-          id: 4,
-          category: "خطة النمو",
-          title: "تحديث أهداف خطة النمو الشخصية",
-          message: "الأستاذة ليلى المنصوري قامت بتعيين هدف تنمية رقمي جديد للربع السنوي القادم.",
-          urgency: "normal",
-          readStatus: false
-        }
-      ];
-      if (data && data.length > 0) {
-        setNotifications(data);
-      } else {
-        setNotifications(fallback);
-      }
+      setNotifications(data || []);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to load notifications from API:', err);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }

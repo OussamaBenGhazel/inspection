@@ -1,6 +1,7 @@
 package com.inspection.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
@@ -14,12 +15,15 @@ public class Inspection {
     @Column(name = "id_inspection")
     private Long idInspection;
 
+    @NotNull(message = "تاريخ الزيارة إجباري")
     @Column(name = "date_visite", nullable = false)
     private LocalDate dateVisite;
 
+    @NotNull(message = "وقت البدء إجباري")
     @Column(name = "heure_debut", nullable = false)
     private LocalTime heureDebut;
 
+    @NotNull(message = "وقت الانتهاء إجباري")
     @Column(name = "heure_fin", nullable = false)
     private LocalTime heureFin;
 
@@ -31,6 +35,10 @@ public class Inspection {
     @JoinColumn(name = "id_inspecteur", nullable = false)
     private Inspecteur inspecteur;
 
+    @ManyToOne
+    @JoinColumn(name = "id_type_visite")
+    private TypeVisite typeVisite;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "statut", nullable = false, length = 20)
     private InspectionStatut statut = InspectionStatut.ouverte;
@@ -38,7 +46,6 @@ public class Inspection {
     @Column(name = "remarques_generales", columnDefinition = "TEXT")
     private String remarquesGenerales;
 
-    // We can store signature as base64 string or a large text block. Text is more stable and versatile for modern base64 drawings than standard raw BLOB.
     @Column(name = "signature_inspecteur", columnDefinition = "TEXT")
     private String signatureInspecteur;
 
@@ -47,7 +54,9 @@ public class Inspection {
 
     @PrePersist
     protected void onCreate() {
-        this.dateCreation = LocalDateTime.now();
+        if (this.dateCreation == null) {
+            this.dateCreation = LocalDateTime.now();
+        }
         if (this.statut == null) {
             this.statut = InspectionStatut.ouverte;
         }
@@ -101,6 +110,14 @@ public class Inspection {
 
     public void setInspecteur(Inspecteur inspecteur) {
         this.inspecteur = inspecteur;
+    }
+
+    public TypeVisite getTypeVisite() {
+        return typeVisite;
+    }
+
+    public void setTypeVisite(TypeVisite typeVisite) {
+        this.typeVisite = typeVisite;
     }
 
     public InspectionStatut getStatut() {

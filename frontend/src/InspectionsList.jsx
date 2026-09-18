@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Search, PlusCircle, ArrowRight, UserPlus,
-  MapPin, School, BookOpen, Star, RefreshCw, Trash2, Edit3, X, Save
+  Search, PlusCircle, UserPlus, RefreshCw, Trash2, Edit3,
+  X, Save, Loader2, ArrowLeft, Eye
 } from 'lucide-react';
 import { apiService } from './apiService';
 
@@ -9,6 +9,9 @@ export default function TeachersList({ onNavigate }) {
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('الكل');
+  const [selectedEtablissement, setSelectedEtablissement] = useState('الكل');
+  const [selectedStatus, setSelectedStatus] = useState('الكل');
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -18,7 +21,7 @@ export default function TeachersList({ onNavigate }) {
   // Form states
   const [nom, setNom] = useState('');
   const [prenom, setPrenom] = useState('');
-  const [matiere, setMatiere] = useState('');
+  const [matiere, setMatiere] = useState('التربية المدنية');
   const [email, setEmail] = useState('');
   const [telephone, setTelephone] = useState('');
 
@@ -42,7 +45,7 @@ export default function TeachersList({ onNavigate }) {
     setIsEditMode(false);
     setNom('');
     setPrenom('');
-    setMatiere('');
+    setMatiere('التربية المدنية');
     setEmail('');
     setTelephone('');
     setShowModal(true);
@@ -53,17 +56,16 @@ export default function TeachersList({ onNavigate }) {
     setCurrentId(t.idEnseignant);
     setNom(t.nom || '');
     setPrenom(t.prenom || '');
-    setMatiere(t.matiere || '');
+    setMatiere(t.matiere || 'التربية المدنية');
     setEmail(t.email || '');
     setTelephone(t.telephone || '');
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('هل أنت متأكد من رغبتك في حذف هذا الأستاذ نهائياً من قاعدة البيانات؟')) {
+  const handleDelete = async (id, name) => {
+    if (window.confirm(`هل أنت متأكد من رغبتك في حذف الأستاذ ${name} نهائياً من قاعدة البيانات؟`)) {
       try {
         await apiService.deleteEnseignant(id);
-        alert('تم حذف الأستاذ بنجاح!');
         fetchTeachers();
       } catch (err) {
         alert('حدث خطأ أثناء محاولة الحذف.');
@@ -83,10 +85,8 @@ export default function TeachersList({ onNavigate }) {
     try {
       if (isEditMode) {
         await apiService.updateEnseignant(currentId, payload);
-        alert('تم تحديث بيانات الأستاذ بنجاح!');
       } else {
         await apiService.createEnseignant(payload);
-        alert('تمت إضافة الأستاذ الجديد بنجاح في قاعدة البيانات!');
       }
       setShowModal(false);
       fetchTeachers();
@@ -95,212 +95,277 @@ export default function TeachersList({ onNavigate }) {
     }
   };
 
-  const filtered = teachers.filter(t => {
-    const fullName = `${t.prenom} ${t.nom}`.toLowerCase();
+  // Dynamic filter dropdown options extracted from live data
+  const regions = ['الكل', ...new Set(teachers.map(t => t.region).filter(Boolean))];
+  const etablissements = ['الكل', ...new Set(teachers.map(t => t.etablissement).filter(Boolean))];
+  const statuses = ['الكل', 'متقدم', 'مستقر', 'متابعة', 'دعم عاجل'];
+
+  const filteredTeachers = teachers.filter(t => {
+    const fullName = (t.fullName || `${t.prenom} ${t.nom}`).toLowerCase();
     const searchVal = searchTerm.toLowerCase();
-    return fullName.includes(searchVal) ||
-           (t.matiere && t.matiere.toLowerCase().includes(searchVal)) ||
-           (t.school && t.school.toLowerCase().includes(searchVal));
+    const matchesSearch = fullName.includes(searchVal) ||
+      (t.etablissement && t.etablissement.toLowerCase().includes(searchVal)) ||
+      (t.matiere && t.matiere.toLowerCase().includes(searchVal));
+
+    const matchesRegion = selectedRegion === 'الكل' || t.region === selectedRegion;
+    const matchesEtab = selectedEtablissement === 'الكل' || t.etablissement === selectedEtablissement;
+    const matchesStatus = selectedStatus === 'الكل' || t.status === selectedStatus;
+
+    return matchesSearch && matchesRegion && matchesEtab && matchesStatus;
   });
 
   return (
     <div className="space-y-6" dir="rtl">
-      {/* HEADER BAR */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Topbar matching prototype */}
+      <div className="topbar flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-800">إدارة وشؤون الأساتذة</h1>
-          <p className="text-xs text-slate-400 font-bold mt-1">عرض وتعديل وإضافة شاملة في كافة ملفات الأساتذة المسجلين في قاعدة البيانات.</p>
+          <div className="eyebrow mb-1">إدارة الملفات</div>
+          <h2 className="text-2xl font-extrabold text-[var(--ink)] m-0">قائمة الأساتذة</h2>
         </div>
-
-        <button
-          onClick={handleOpenAdd}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl shadow-lg shadow-blue-100 transition text-xs shrink-0"
-        >
-          <UserPlus size={16} />
-          <span>إضافة أستاذ جديد</span>
-        </button>
-      </div>
-
-      {/* FILTERING & SEARCH BAR */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
-        <div className="relative">
-          <span className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 pointer-events-none">
-            <Search size={16} />
-          </span>
-          <input
-            type="text"
-            placeholder="ابحث باسم الأستاذ، المادة، أو البريد الإلكتروني..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pr-10 pl-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white text-slate-800 text-xs transition font-semibold"
-          />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={fetchTeachers}
+            className="stat-chip flex items-center gap-2 hover:border-[var(--accent)] transition cursor-pointer"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            <span>تحديث القائمة</span>
+          </button>
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-100">
-          <RefreshCw className="animate-spin text-blue-600 mr-2" />
-          <span className="text-xs font-bold text-slate-500">جاري تحميل قائمة الأساتذة الحية...</span>
+      {/* Filter Row Panel matching prototype */}
+      <div className="panel">
+        <div className="grid grid-cols-1 md:grid-cols-[1.4fr_repeat(3,1fr)_auto] gap-3 items-center">
+          <div className="relative flex items-center bg-white border border-[var(--line)] rounded-[16px] px-3 py-2.5">
+            <Search size={16} className="text-[var(--muted)] ml-2" />
+            <input
+              type="text"
+              placeholder="ابحث بالاسم أو المؤسسة..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-transparent border-none outline-none text-xs text-[var(--ink)] w-full placeholder:text-[var(--muted)]"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-[var(--line)] rounded-[16px] px-3 py-2 text-xs">
+            <span className="text-[var(--muted)] shrink-0">المندوبية:</span>
+            <select
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              className="bg-transparent border-none outline-none text-[var(--ink)] font-bold w-full cursor-pointer"
+            >
+              {regions.map((r, i) => (
+                <option key={i} value={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-[var(--line)] rounded-[16px] px-3 py-2 text-xs">
+            <span className="text-[var(--muted)] shrink-0">المؤسسة:</span>
+            <select
+              value={selectedEtablissement}
+              onChange={(e) => setSelectedEtablissement(e.target.value)}
+              className="bg-transparent border-none outline-none text-[var(--ink)] font-bold w-full cursor-pointer"
+            >
+              {etablissements.map((e, i) => (
+                <option key={i} value={e}>{e}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white border border-[var(--line)] rounded-[16px] px-3 py-2 text-xs">
+            <span className="text-[var(--muted)] shrink-0">الحالة:</span>
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-transparent border-none outline-none text-[var(--ink)] font-bold w-full cursor-pointer"
+            >
+              {statuses.map((s, i) => (
+                <option key={i} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            onClick={handleOpenAdd}
+            className="btn accent flex items-center justify-center gap-2 px-5 py-2.5 text-xs whitespace-nowrap cursor-pointer hover:opacity-90 transition"
+          >
+            <PlusCircle size={16} />
+            <span>إضافة أستاذ</span>
+          </button>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      </div>
+
+      {/* Teachers Table Panel matching prototype */}
+      <div className="panel">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-[var(--accent)]">
+            <Loader2 className="animate-spin" size={28} />
+            <span className="text-xs font-bold">جاري استرجاع قائمة الأساتذة الحية من الخادم...</span>
+          </div>
+        ) : filteredTeachers.length === 0 ? (
+          <div className="text-center py-12 text-sm text-[var(--muted)] font-semibold">
+            لم يتم العثور على أي أستاذ يطابق معايير البحث والتصفية المحددة.
+          </div>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-right border-collapse">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 text-xs font-bold border-b border-slate-100">
-                  <th className="p-4">الأستاذ</th>
-                  <th className="p-4">المادة البيداغوجية</th>
-                  <th className="p-4">البريد الإلكتروني</th>
-                  <th className="p-4">الهاتف</th>
-                  <th className="p-4 text-center">الإجراءات والعمليات</th>
+                <tr className="border-b border-[var(--line)] text-xs text-[var(--ink)] bg-[rgba(13,108,125,0.08)]">
+                  <th className="p-3.5 rounded-r-xl font-extrabold">الأستاذ</th>
+                  <th className="p-3.5 font-extrabold">المؤسسة والمندوبية</th>
+                  <th className="p-3.5 font-extrabold">آخر زيارة</th>
+                  <th className="p-3.5 font-extrabold">المعدل</th>
+                  <th className="p-3.5 font-extrabold">الحالة</th>
+                  <th className="p-3.5 rounded-l-xl font-extrabold text-center">إجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                {filtered.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="p-8 text-center text-slate-400 font-bold">لا توجد سجلات مطابقة للبحث.</td>
+              <tbody className="divide-y divide-[var(--line)] text-xs font-medium">
+                {filteredTeachers.map((teacher) => (
+                  <tr
+                    key={teacher.idEnseignant}
+                    className="hover:bg-white/60 transition group cursor-pointer"
+                    onClick={() => onNavigate && onNavigate('teacher-profile', teacher)}
+                  >
+                    <td className="p-3.5">
+                      <strong className="text-[var(--ink)] block font-extrabold text-sm">{teacher.fullName || `${teacher.prenom} ${teacher.nom}`}</strong>
+                      <span className="text-[var(--muted)] text-[11px] font-semibold">{teacher.matiere || 'أستاذ تربية مدنية'}</span>
+                    </td>
+                    <td className="p-3.5">
+                      <span className="font-bold text-[var(--ink)]">{teacher.etablissement || 'إعدادية ابن رشد'}</span>
+                      <span className="text-[var(--muted)] text-[11px] block">{teacher.region || 'قابس'}</span>
+                    </td>
+                    <td className="p-3.5 font-bold text-slate-700">{teacher.lastVisitDate || '20 ماي 2027'}</td>
+                    <td className="p-3.5 font-extrabold text-[var(--accent)] text-sm">{teacher.score ? `${teacher.score}/4` : '3.2/4'}</td>
+                    <td className="p-3.5">
+                      <span className={`status ${teacher.tone || 'info'}`}>
+                        {teacher.status || 'مستقر'}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => onNavigate && onNavigate('teacher-profile', teacher)}
+                          className="p-1.5 text-[var(--accent)] hover:bg-[rgba(13,108,125,0.1)] rounded-lg transition"
+                          title="عرض الملف البيداغوجي"
+                        >
+                          <Eye size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleOpenEdit(teacher)}
+                          className="p-1.5 text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                          title="تعديل البيانات"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(teacher.idEnseignant, teacher.fullName)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="حذف الأستاذ"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                ) : (
-                  filtered.map((t) => (
-                    <tr key={t.idEnseignant} className="hover:bg-slate-50/50 transition">
-                      <td className="p-4 font-bold text-slate-800">
-                        {t.prenom} {t.nom}
-                      </td>
-                      <td className="p-4 text-slate-600 font-semibold">
-                        {t.matiere}
-                      </td>
-                      <td className="p-4 text-slate-500 font-semibold">
-                        {t.email || 'غير متوفر'}
-                      </td>
-                      <td className="p-4 text-slate-500 font-semibold">
-                        {t.telephone || 'غير متوفر'}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            onClick={() => handleOpenEdit(t)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition text-[10px] font-bold"
-                          >
-                            <Edit3 size={12} />
-                            <span>تعديل</span>
-                          </button>
-                          <button
-                            onClick={() => handleDelete(t.idEnseignant)}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg transition text-[10px] font-bold"
-                          >
-                            <Trash2 size={12} />
-                            <span>حذف</span>
-                          </button>
-                          <button
-                            onClick={() => onNavigate('teacher-profile', { id: t.idEnseignant, name: `${t.prenom} ${t.nom}`, school: 'المدرسة الإعدادية الحكومية', region: 'الجمهورية التونسية', rank: 'أستاذ أول للمادة', score: '3.5 / 4' })}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition text-[10px] font-bold"
-                          >
-                            <span>ملف الكفايات</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* ADD/EDIT DYNAMIC MODAL FORM */}
+      {/* Add / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-800">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-[24px] shadow-2xl border border-[var(--line)] max-w-lg w-full p-6 animate-scaleUp">
+            <div className="flex items-center justify-between pb-4 border-b border-[var(--line)] mb-4">
+              <h3 className="font-extrabold text-base text-[var(--ink)]">
                 {isEditMode ? 'تعديل بيانات الأستاذ' : 'إضافة أستاذ جديد'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-slate-800 rounded-lg transition"
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
-            {/* Modal Form Content */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 text-xs font-semibold text-slate-700">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-500 mb-1">الاسم الأول *</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">الاسم *</label>
                   <input
                     type="text"
-                    required
                     value={prenom}
                     onChange={(e) => setPrenom(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-                    placeholder="أدخل الاسم الأول..."
+                    required
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-xl text-xs outline-none focus:border-[var(--accent)]"
+                    placeholder="الاسم"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-500 mb-1">اللقب / اسم العائلة *</label>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">اللقب *</label>
                   <input
                     type="text"
-                    required
                     value={nom}
                     onChange={(e) => setNom(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-                    placeholder="أدخل اسم العائلة..."
+                    required
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-xl text-xs outline-none focus:border-[var(--accent)]"
+                    placeholder="اللقب"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-500 mb-1">المادة المدرسة / الاختصاص البيداغوجي *</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1">المادة الدراسية *</label>
                 <input
                   type="text"
-                  required
                   value={matiere}
                   onChange={(e) => setMatiere(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-                  placeholder="مثال: الرياضيات، الفيزياء، العربية..."
+                  required
+                  className="w-full px-3 py-2 border border-[var(--line)] rounded-xl text-xs outline-none focus:border-[var(--accent)]"
+                  placeholder="المادة الدراسية"
                 />
               </div>
 
-              <div>
-                <label className="block text-slate-500 mb-1">البريد الإلكتروني</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-                  placeholder="username@domain.com"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">البريد الإلكتروني</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-xl text-xs outline-none focus:border-[var(--accent)]"
+                    placeholder="name@education.tn"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">رقم الهاتف</label>
+                  <input
+                    type="tel"
+                    value={telephone}
+                    onChange={(e) => setTelephone(e.target.value)}
+                    className="w-full px-3 py-2 border border-[var(--line)] rounded-xl text-xs outline-none focus:border-[var(--accent)]"
+                    placeholder="8 أرقام"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-slate-500 mb-1">رقم الهاتف الجوال</label>
-                <input
-                  type="text"
-                  value={telephone}
-                  onChange={(e) => setTelephone(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800"
-                  placeholder="أدخل رقم الهاتف..."
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+              <div className="flex justify-end gap-2 pt-4 border-t border-[var(--line)] mt-4">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded-xl transition"
+                  className="btn secondary text-xs"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition"
+                  className="btn primary text-xs flex items-center gap-1.5"
                 >
                   <Save size={14} />
-                  <span>{isEditMode ? 'حفظ التعديلات' : 'إضافة إلى القائمة'}</span>
+                  <span>{isEditMode ? 'حفظ التعديلات' : 'إضافة الآن'}</span>
                 </button>
               </div>
             </form>

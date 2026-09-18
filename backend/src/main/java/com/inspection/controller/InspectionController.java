@@ -6,6 +6,7 @@ import com.inspection.model.*;
 import com.inspection.kafka.NotificationKafkaProducer;
 import com.inspection.repository.*;
 import com.inspection.service.PdfReportService;
+import com.inspection.service.ExcelReportService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -34,6 +35,7 @@ public class InspectionController {
     private final EvaluationRepository evaluationRepository;
     private final PieceJointeRepository pieceJointeRepository;
     private final PdfReportService pdfReportService;
+    private final ExcelReportService excelReportService;
     private final NotificationKafkaProducer notificationKafkaProducer;
 
     // Define local upload directory
@@ -46,6 +48,7 @@ public class InspectionController {
             EvaluationRepository evaluationRepository,
             PieceJointeRepository pieceJointeRepository,
             PdfReportService pdfReportService,
+            ExcelReportService excelReportService,
             NotificationKafkaProducer notificationKafkaProducer) {
         this.inspectionRepository = inspectionRepository;
         this.enseignantRepository = enseignantRepository;
@@ -53,6 +56,7 @@ public class InspectionController {
         this.evaluationRepository = evaluationRepository;
         this.pieceJointeRepository = pieceJointeRepository;
         this.pdfReportService = pdfReportService;
+        this.excelReportService = excelReportService;
         this.notificationKafkaProducer = notificationKafkaProducer;
 
         // Ensure upload directory exists
@@ -406,40 +410,13 @@ public class InspectionController {
             return ResponseEntity.notFound().build();
         }
 
-        StringBuilder csv = new StringBuilder();
-        // UTF-8 BOM
-        csv.append("\uFEFF");
-        // Headers
-        csv.append("الخاصية,القيمة\n");
-        csv.append("رقم الزيارة,").append(inspection.getIdInspection()).append("\n");
-        csv.append("تاريخ الزيارة,").append(inspection.getDateVisite()).append("\n");
-        csv.append("وقت البدء,").append(inspection.getHeureDebut()).append("\n");
-        csv.append("وقت الانتهاء,").append(inspection.getHeureFin()).append("\n");
-        csv.append("المتفقد المشرف,").append(inspection.getInspecteur().getPrenom()).append(" ").append(inspection.getInspecteur().getNom()).append("\n");
-        csv.append("المستفيد (الأستاذ),").append(inspection.getEnseignant().getPrenom()).append(" ").append(inspection.getEnseignant().getNom()).append("\n");
-        csv.append("المادة,").append(inspection.getEnseignant().getMatiere()).append("\n");
-        csv.append("حالة الزيارة,").append(inspection.getStatut().name()).append("\n");
-
-        String remarks = inspection.getRemarquesGenerales() != null ? inspection.getRemarquesGenerales().replace(",", "،").replace("\n", " ") : "";
-        csv.append("الملاحظات العامة,").append(remarks).append("\n");
-        csv.append("\n");
-        csv.append("الكفاية / المعيار,الدرجة / 10,الملاحظة التقييمية\n");
-
-        List<Evaluation> evs = evaluationRepository.findByInspectionIdInspection(id);
-        for (Evaluation ev : evs) {
-            String comment = ev.getCommentaire() != null ? ev.getCommentaire().replace(",", "،").replace("\n", " ") : "";
-            csv.append(ev.getCritere()).append(",")
-               .append(ev.getNote()).append(",")
-               .append(comment).append("\n");
-        }
-
-        byte[] csvBytes = csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] excelBytes = excelReportService.generateExcelReport(inspection);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
-        headers.setContentDispositionFormData("attachment", "inspection-report-" + id + ".csv");
+        headers.setContentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
+        headers.setContentDispositionFormData("attachment", "rapport-inspection-" + id + ".xlsx");
         headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
 
-        return new ResponseEntity<>(csvBytes, headers, HttpStatus.OK);
+        return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
     }
 }

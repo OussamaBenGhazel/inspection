@@ -141,8 +141,55 @@ export const apiService = {
   },
 
   getDashboardStats: async () => {
-    const res = await authFetch(`${API_BASE_URL}/inspections/dashboard-stats`);
-    if (!res.ok) throw new Error('Failed to load dashboard statistics');
+    try {
+      const res = await authFetch(`${API_BASE_URL}/dashboard/stats`);
+      if (res.ok) return await res.json();
+    } catch (e) {
+      console.warn('Dashboard stats fallback:', e);
+    }
+    const resFallback = await authFetch(`${API_BASE_URL}/inspections/dashboard-stats`);
+    if (!resFallback.ok) throw new Error('Failed to load dashboard statistics');
+    return resFallback.json();
+  },
+
+  getTeacherProfile: async (id) => {
+    const res = await authFetch(`${API_BASE_URL}/enseignants/${id}/profile`);
+    if (!res.ok) throw new Error('Failed to load teacher profile');
+    return res.json();
+  },
+
+  getPedagogyCompetencies: async (inspectionId = null) => {
+    const query = inspectionId ? `?inspectionId=${inspectionId}` : '';
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/competencies${query}`);
+    if (!res.ok) throw new Error('Failed to load competencies');
+    return res.json();
+  },
+
+  getPedagogyRecommendations: async (teacherId = null) => {
+    const query = teacherId ? `?enseignantId=${teacherId}` : '';
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/recommendations${query}`);
+    if (!res.ok) throw new Error('Failed to load recommendations');
+    return res.json();
+  },
+
+  getPedagogyIndicators: async (teacherId = null) => {
+    const query = teacherId ? `?enseignantId=${teacherId}` : '';
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/indicators${query}`);
+    if (!res.ok) throw new Error('Failed to load indicators');
+    return res.json();
+  },
+
+  getPedagogyGrowthPlans: async (teacherId = null) => {
+    const query = teacherId ? `?enseignantId=${teacherId}` : '';
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/growth-plans${query}`);
+    if (!res.ok) throw new Error('Failed to load growth plans');
+    return res.json();
+  },
+
+  getPedagogyDiagnostic: async (inspectionId = null) => {
+    const query = inspectionId ? `?inspectionId=${inspectionId}` : '';
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/diagnostic${query}`);
+    if (!res.ok) throw new Error('Failed to load diagnostic');
     return res.json();
   },
 
@@ -166,11 +213,94 @@ export const apiService = {
     return res.json();
   },
 
-  markAllNotificationsAsRead: async () => {
-    const res = await authFetch(`${API_BASE_URL}/notifications/read-all`, {
-      method: 'POST'
+  updateIndicator: async (id, data) => {
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/indicators/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
-    if (!res.ok) throw new Error('Failed to mark all notifications as read');
-    return true;
+    if (!res.ok) throw new Error('Failed to update indicator');
+    return res.json();
+  },
+
+  updateRecommendation: async (id, data) => {
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/recommendations/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to update recommendation');
+    return res.json();
+  },
+
+  saveDiagnostic: async (data) => {
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/diagnostic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to save diagnostic');
+    return res.json();
+  },
+
+  saveGrowthPlan: async (data) => {
+    const res = await authFetch(`${API_BASE_URL}/pedagogy/growth-plans`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to save growth plan');
+    return res.json();
+  },
+
+  getSystemUsers: async () => {
+    const res = await authFetch(`${API_BASE_URL}/audit-logs/users`);
+    if (!res.ok) throw new Error('Failed to load system users');
+    return res.json();
+  },
+
+  getRolesSummary: async () => {
+    const res = await authFetch(`${API_BASE_URL}/audit-logs/roles-summary`);
+    if (!res.ok) throw new Error('Failed to load roles summary');
+    return res.json();
+  },
+
+  downloadInspectionPdf: async (id, filename) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/inspections/${id}/report`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!res.ok) throw new Error('فشل في توليد تقرير PDF المعتمد');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `rapport-inspection-${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    }, 1500);
+  },
+
+  downloadInspectionExcel: async (id, filename) => {
+    const token = localStorage.getItem('token');
+    const res = await fetch(`${API_BASE_URL}/inspections/${id}/excel`, {
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+    if (!res.ok) throw new Error('فشل في تصدير جدول Excel المعتمد');
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `rapport-inspection-${id}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    }, 1500);
   }
 };
+

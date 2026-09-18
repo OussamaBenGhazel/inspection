@@ -2,96 +2,113 @@ package com.inspection.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "inspecteurs")
-public class Inspecteur {
+@PrimaryKeyJoinColumn(name = "id_inspecteur")
+public class Inspecteur extends Utilisateur {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_inspecteur")
-    private Long idInspecteur;
+    @Pattern(regexp = "^[A-Z0-9_-]{3,30}$", message = "رقم المعرف الإداري يجب أن يتكون من 3 إلى 30 رقماً أو حرفاً")
+    @Column(name = "matricule", unique = true, length = 50)
+    private String matricule;
 
-    @NotBlank
     @Size(max = 100)
-    @Column(name = "nom", nullable = false, length = 100)
-    private String nom;
+    @Column(name = "specialite", length = 100)
+    private String specialite; // e.g. "التربية المدنية"
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "prenom", nullable = false, length = 100)
-    private String prenom;
+    @ManyToOne
+    @JoinColumn(name = "id_region")
+    private Region region;
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "username", unique = true, nullable = false, length = 100)
+    @Pattern(regexp = "^(\\+216)?[0-9]{8}$", message = "رقم الهاتف يجب أن يتكون من 8 أرقام صحيحة")
+    @Column(name = "telephone", length = 20)
+    private String telephone;
+
+    // Optional legacy column for username compatibility
+    @Column(name = "username", unique = true, length = 100)
     private String username;
 
-    @NotBlank
-    @Size(max = 255)
-    @Column(name = "password", nullable = false)
-    private String password;
+    public Inspecteur() {
+        super();
+        setRole("inspecteur");
+    }
 
-    @Size(max = 50)
-    @Column(name = "role", length = 50)
-    private String role; // 'inspecteur', 'directeur', 'administrateur'
+    public Inspecteur(String nom, String prenom, String email, String motDePasse, String matricule, String specialite, Region region, String telephone) {
+        super(nom, prenom, email, motDePasse, "inspecteur");
+        this.matricule = matricule;
+        this.specialite = specialite;
+        this.region = region;
+        this.telephone = telephone;
+        this.username = email;
+    }
 
-    public Inspecteur() {}
-
+    // Backward-compatibility constructor
     public Inspecteur(String nom, String prenom, String username, String password, String role) {
-        this.nom = nom;
-        this.prenom = prenom;
+        super(nom, prenom, username.contains("@") ? username : username + "@inspection.tn", password, role);
         this.username = username;
-        this.password = password;
-        this.role = role;
+        this.matricule = "INS-" + (username.toUpperCase());
+        this.specialite = "التربية المدنية";
     }
 
     public Long getIdInspecteur() {
-        return idInspecteur;
+        return getId();
     }
 
     public void setIdInspecteur(Long idInspecteur) {
-        this.idInspecteur = idInspecteur;
+        setId(idInspecteur);
     }
 
-    public String getNom() {
-        return nom;
+    public String getMatricule() {
+        return matricule;
     }
 
-    public void setNom(String nom) {
-        this.nom = nom;
+    public void setMatricule(String matricule) {
+        this.matricule = matricule;
     }
 
-    public String getPrenom() {
-        return prenom;
+    public String getSpecialite() {
+        return specialite;
     }
 
-    public void setPrenom(String prenom) {
-        this.prenom = prenom;
+    public void setSpecialite(String specialite) {
+        this.specialite = specialite;
     }
 
+    public Region getRegion() {
+        return region;
+    }
+
+    public void setRegion(Region region) {
+        this.region = region;
+    }
+
+    public String getTelephone() {
+        return telephone;
+    }
+
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
+    }
+
+    // Compatibility getters and setters
     public String getUsername() {
-        return username;
+        return username != null ? username : getEmail();
     }
 
     public void setUsername(String username) {
         this.username = username;
+        if (getEmail() == null || getEmail().isEmpty()) {
+            setEmail(username.contains("@") ? username : username + "@inspection.tn");
+        }
     }
 
     public String getPassword() {
-        return password;
+        return getMotDePasse();
     }
 
     public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
+        setMotDePasse(password);
     }
 }

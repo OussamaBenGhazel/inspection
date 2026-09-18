@@ -15,10 +15,43 @@ public class AuditLogController {
 
     private final AuditLogRepository auditLogRepository;
     private final NotificationKafkaProducer kafkaProducer;
+    private final com.inspection.repository.UtilisateurRepository utilisateurRepository;
 
-    public AuditLogController(AuditLogRepository auditLogRepository, NotificationKafkaProducer kafkaProducer) {
+    public AuditLogController(
+            AuditLogRepository auditLogRepository,
+            NotificationKafkaProducer kafkaProducer,
+            com.inspection.repository.UtilisateurRepository utilisateurRepository) {
         this.auditLogRepository = auditLogRepository;
         this.kafkaProducer = kafkaProducer;
+        this.utilisateurRepository = utilisateurRepository;
+    }
+
+    @GetMapping("/users")
+    public List<java.util.Map<String, Object>> getSystemUsers() {
+        return utilisateurRepository.findAll().stream().map(u -> {
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", u.getId());
+            map.put("name", u.getPrenom() + " " + u.getNom());
+            map.put("email", u.getEmail());
+            map.put("role", u.getRole());
+            map.put("actif", u.getActif());
+            map.put("status", Boolean.TRUE.equals(u.getActif()) ? "نشط 🟢" : "غير نشط ⚪");
+            map.put("lastLogin", "اليوم");
+            return map;
+        }).toList();
+    }
+
+    @GetMapping("/roles-summary")
+    public List<java.util.Map<String, Object>> getRolesSummary() {
+        long adminCount = utilisateurRepository.findAll().stream().filter(u -> "administrateur".equalsIgnoreCase(u.getRole())).count();
+        long inspectorCount = utilisateurRepository.findAll().stream().filter(u -> "inspecteur".equalsIgnoreCase(u.getRole())).count();
+        long teacherCount = utilisateurRepository.findAll().stream().filter(u -> "enseignant".equalsIgnoreCase(u.getRole())).count();
+
+        return List.of(
+            java.util.Map.of("title", "مدير النظام (System Admin)", "count", adminCount + " مستخدم نشط", "desc", "كامل صلاحيات الإدارة والتهيئة، إضافة المؤسسات، والمستخدمين وسجل العمليات."),
+            java.util.Map.of("title", "المتفقد التربوي (Inspectors)", "count", inspectorCount + " مستخدمين", "desc", "صلاحيات تسجيل الزيارات الميدانية، تقييم كفايات الأساتذة، رسم التوقيع والتصدير."),
+            java.util.Map.of("title", "الأستاذ (Teachers)", "count", teacherCount + " مستخدم نشط", "desc", "صلاحيات العرض فقط، قراءة التقارير المعتمدة وتحديث أهداف خطة النمو الشخصية.")
+        );
     }
 
     @GetMapping

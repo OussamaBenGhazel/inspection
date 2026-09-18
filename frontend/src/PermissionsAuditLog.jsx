@@ -4,35 +4,30 @@ import { apiService } from './apiService';
 
 export default function PermissionsAuditLog({ onNavigate }) {
   const [logs, setLogs] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Roles Breakdown
-  const roles = [
-    { title: "مدير النظام (System Admin)", count: "1 مستخدم نشط", desc: "كامل صلاحيات الإدارة والتهيئة، إضافة المؤسسات، والمستخدمين وسجل العمليات." },
-    { title: "المتفقد التربوي (Inspectors)", count: "3 مستخدمين", desc: "صلاحيات تسجيل الزيارات الميدانية، تقييم كفايات الأساتذة، رسم التوقيع والتصدير." },
-    { title: "الأستاذ (Teachers)", count: "124 مستخدم نشط", desc: "صلاحيات العرض فقط، قراءة التقارير المعتمدة وتحديث أهداف خطة النمو الشخصية." }
-  ];
-
-  // Active Users table
-  const activeUsers = [
-    { name: "أحمد العربي", role: "مدير النظام", status: "نشط 🟢", lastLogin: "اليوم 10:15" },
-    { name: "آمنة فرحات", role: "متفقدة أولى", status: "نشط 🟢", lastLogin: "اليوم 13:40" },
-    { name: "صالح البكوش", role: "أستاذ أول", status: "غير نشط ⚪", lastLogin: "أمس 18:22" }
-  ];
-
-  const fetchLogs = async () => {
+  const fetchData = async () => {
     try {
-      const data = await apiService.getAuditLogs();
-      setLogs(data);
+      setLoading(true);
+      const [logsData, usersData, rolesData] = await Promise.all([
+        apiService.getAuditLogs().catch(() => []),
+        apiService.getSystemUsers().catch(() => []),
+        apiService.getRolesSummary().catch(() => [])
+      ]);
+      setLogs(logsData || []);
+      setUsers(usersData || []);
+      setRoles(rolesData || []);
     } catch (err) {
-      console.error(err);
+      console.error('Error loading audit and permissions data:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchLogs();
+    fetchData();
   }, []);
 
   return (
@@ -47,10 +42,18 @@ export default function PermissionsAuditLog({ onNavigate }) {
             <ArrowRight size={18} />
           </button>
           <div>
-            <h1 className="text-2xl font-extrabold text-slate-800">إدارة الصلاحيات وسجل التدقيق التدريجي</h1>
-            <p className="text-xs text-slate-400 font-bold mt-1">تتبع وحماية عمليات النظام ورصد الأنشطة في الوقت الفعلي لأمن وسرية التقييمات البيداغوجية.</p>
+            <h1 className="text-2xl font-extrabold text-slate-800">إدارة الصلاحيات وسجل التدقيق الحي</h1>
+            <p className="text-xs text-slate-400 font-bold mt-1">تتبع وحماية عمليات النظام ورصد الأنشطة في الوقت الفعلي (بيانات مسجلة وموثقة في السيرفر).</p>
           </div>
         </div>
+
+        <button
+          onClick={fetchData}
+          className="flex items-center gap-1.5 px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold transition shadow-sm"
+        >
+          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          <span>تحديث السجل والمستخدمين</span>
+        </button>
       </div>
 
       {/* USER ROLES PANEL */}
@@ -61,7 +64,9 @@ export default function PermissionsAuditLog({ onNavigate }) {
               <span className="p-2 bg-blue-50 text-blue-600 rounded-xl">
                 <Shield size={18} />
               </span>
-              <span className="text-[10px] text-slate-400 font-bold">{role.count}</span>
+              <span className="text-[10px] text-blue-600 font-extrabold px-2 py-0.5 bg-blue-50 rounded-full">
+                {role.count}
+              </span>
             </div>
             <h3 className="text-xs font-extrabold text-slate-800">{role.title}</h3>
             <p className="text-[11px] text-slate-500 leading-relaxed">{role.desc}</p>
@@ -72,43 +77,59 @@ export default function PermissionsAuditLog({ onNavigate }) {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 text-xs font-bold leading-relaxed">
         {/* Active Users Table */}
         <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
-          <h3 className="text-xs text-slate-800 border-b border-slate-100 pb-2">جدول المستخدمين النشطين</h3>
-          <table className="w-full text-right border-collapse">
-            <thead>
-              <tr className="text-slate-400 border-b border-slate-100 text-[11px]">
-                <th className="pb-3">المستخدم</th>
-                <th className="pb-3">الرتبة / الدور</th>
-                <th className="pb-3">الحالة</th>
-                <th className="pb-3">آخر تسجيل دخول</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50 text-slate-700">
-              {activeUsers.map((usr, idx) => (
-                <tr key={idx}>
-                  <td className="py-3 font-extrabold">{usr.name}</td>
-                  <td className="py-3 text-slate-500 font-semibold">{usr.role}</td>
-                  <td className="py-3 font-extrabold">{usr.status}</td>
-                  <td className="py-3 text-slate-400 font-semibold">{usr.lastLogin}</td>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 className="text-xs text-slate-800 flex items-center gap-1.5 font-extrabold">
+              <User size={15} />
+              <span>جدول المستخدمين النشطين في قاعدة البيانات</span>
+            </h3>
+            <span className="text-[10px] text-slate-400 font-bold">{users.length} مستخدم مسجل</span>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-right border-collapse">
+              <thead>
+                <tr className="text-slate-400 border-b border-slate-100 text-[11px]">
+                  <th className="pb-3">المستخدم</th>
+                  <th className="pb-3">البريد الإلكتروني</th>
+                  <th className="pb-3">الرتبة / الدور</th>
+                  <th className="pb-3">الحالة</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-50 text-slate-700 text-xs">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="py-6 text-center text-slate-400 font-semibold">
+                      لا يوجد مستخدمون مسجلون.
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((usr, idx) => (
+                    <tr key={usr.id || idx} className="hover:bg-slate-50/50 transition">
+                      <td className="py-3 font-extrabold text-slate-800">{usr.name}</td>
+                      <td className="py-3 text-slate-500 font-medium text-[11px]">{usr.email}</td>
+                      <td className="py-3">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-extrabold">
+                          {usr.role === 'administrateur' ? 'مدير النظام' :
+                           usr.role === 'inspecteur' ? 'متفقد تربوي' : 'أستاذ'}
+                        </span>
+                      </td>
+                      <td className="py-3 font-extrabold">{usr.status || 'نشط 🟢'}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* SYSTEM AUDIT LOG */}
         <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h3 className="text-xs text-slate-800 flex items-center gap-1.5">
+            <h3 className="text-xs text-slate-800 flex items-center gap-1.5 font-extrabold">
               <History size={15} />
-              <span>سجل العمليات والتدقيق التدريجي الحي</span>
+              <span>سجل التدقيق والعمليات الحي</span>
             </h3>
-            <button
-              onClick={fetchLogs}
-              className="p-1 bg-slate-50 hover:bg-slate-100 rounded text-slate-500"
-              title="تحديث السجل"
-            >
-              <RefreshCw size={12} />
-            </button>
+            <span className="text-[10px] text-slate-400 font-bold">{logs.length} عملية</span>
           </div>
 
           {loading ? (
@@ -119,7 +140,9 @@ export default function PermissionsAuditLog({ onNavigate }) {
           ) : (
             <div className="relative border-r border-slate-100 pr-4 space-y-4 text-[11px] max-h-80 overflow-y-auto">
               {logs.length === 0 ? (
-                <div className="text-center py-8 text-slate-400 font-bold">لا توجد عمليات مسجلة في السجل المالي والتدقيقي حتى الآن.</div>
+                <div className="text-center py-8 text-slate-400 font-bold">
+                  لا توجد عمليات مسجلة في سجل التدقيق حالياً.
+                </div>
               ) : (
                 logs.map((item) => (
                   <div key={item.id} className="relative">
@@ -130,11 +153,11 @@ export default function PermissionsAuditLog({ onNavigate }) {
                           {item.actionName}
                         </span>
                         <span className="text-[9px] text-slate-400 font-bold">
-                          {new Date(item.timestamp).toLocaleTimeString('ar-TN')}
+                          {item.timestamp ? new Date(item.timestamp).toLocaleTimeString('ar-TN') : 'الآن'}
                         </span>
                       </div>
-                      <p className="text-slate-700 font-semibold mt-1">{item.message}</p>
-                      <p className="text-[10px] text-slate-400 font-semibold">المشرف: {item.username}</p>
+                      <p className="text-slate-700 font-semibold mt-1 leading-relaxed">{item.message}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold">المستخدم: {item.username}</p>
                     </div>
                   </div>
                 ))
